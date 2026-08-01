@@ -1,6 +1,6 @@
 // S5 · Wavelength storefront (Doc 5). The "right window" the whole demo watches: the price is
 // huge, and an order-confirmed card appears the instant the strike lands (Beat 4's payoff).
-import { getProduct, latestOrder, SEED_PRODUCT } from "@/lib/store/wavelength";
+import { getProduct, latestOrder, listProducts, SEED_PRODUCT } from "@/lib/store/wavelength";
 import { Refresher } from "./refresher";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +9,7 @@ const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
 export default function StorePage() {
   const p = getProduct(SEED_PRODUCT.sku)!;
+  const catalog = listProducts().filter((product) => product.sku !== p.sku);
   const order = latestOrder();
   const onSale = p.priceCents < SEED_PRODUCT.priceCents;
 
@@ -51,6 +52,21 @@ export default function StorePage() {
           </div>
         </section>
       )}
+
+      <section className="wv-catalog">
+        <div className="wv-catalog-head"><h2>More from Wavelength</h2><span>Catalog preview</span></div>
+        <div className="wv-catalog-grid">
+          {catalog.map((product) => (
+            <article className="wv-product-card" key={product.sku}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={product.imageUrl} alt="" />
+              <div className="wv-product-name">{product.name}</div>
+              <div className="wv-product-price">{usd(product.priceCents)}</div>
+              <div className="wv-product-note">Catalog item · checkout coming soon</div>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

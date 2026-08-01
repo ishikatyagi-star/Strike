@@ -18,14 +18,14 @@ One user, one job. Not a deals app, not a shopping assistant, not a browser exte
 
 ## Demo narrative (live, projector, ≤ 3:00)
 
-Setup on screen: **left window = Strike app**, **right window = "Wavelength" storefront** (our mock merchant selling AirPods Pro at $199). We say out loud: *"The store is ours — built so we can move the price on stage. The payment rails are 100% real Prava sandbox: real passkey, real network-scoped token."* Honesty is part of the trust pitch.
+Setup on screen: **the `/demo` cockpit**, with Strike's live mandate on the left and the **Wavelength merchant simulator** on the right (a five-product mock catalogue; AirPods Pro at $199 is the only verified checkout path). We say out loud: *"The store is ours — built so we can move the price on stage. The payment rails are 100% real Prava sandbox: real passkey, real network-scoped token."* Honesty is part of the trust pitch.
 
 | Beat | Clock | What we say | What's on screen |
 |---|---|---|---|
 | 1. Hook | 0:00–0:20 | "Agents can shop, but they can't be trusted to *wait and spend*. Strike is pre-approval with teeth." | Strike hero screen, one sentence of copy. |
 | 2. Create mandate | 0:20–0:55 | "I want these at $180, not $199. I say so once." | Type/select: *AirPods Pro · buy if price < $180 · before Friday · qty 1*. Mandate scope card renders every limit. **Touch ID passkey prompt fires.** State flips to **ARMED**. |
 | 3. Armed & watching | 0:55–1:10 | "Strike is now watching. I'm asleep. No card is on file anywhere." | Mandate list: ARMED badge, live price ticker $199, countdown to expiry. |
-| 4. The strike | 1:10–1:45 | "It's 3am. Wavelength drops the price." *(we click the storefront admin lever → $174)* | Watcher fires within seconds. Live timeline animates: **TRIGGERED → Prava session → token minted (•••• last4) → checkout → PAID $174**. Storefront order-confirmation appears on the right. |
+| 4. The strike | 1:10–1:45 | "It's 3am. Wavelength drops the price." *(we click the clearly labelled merchant-simulator lever → $174)* | Watcher fires within seconds. Live timeline animates: **TRIGGERED → Prava session → token minted (•••• last4) → checkout → PAID $174**. Storefront order-confirmation appears on the right. |
 | 5. The decline | 1:45–2:15 | "Now watch the agent try to misbehave." | We replay an execution attempt over the cap / reuse the spent token. Card network **DECLINES**. Audit log shows the refusal — enforcement is the network, not our code. |
 | 6. Trust close | 2:15–2:50 | "The LLM never touches the spend decision. The mandate is passkey-signed; the token is single-use and scoped. Revocation is one tap. This is futures on retail intent." | Execution receipt with full audit trail; one-tap revoke on a second mandate; Prava dashboard showing the scoped payment. |
 
@@ -33,7 +33,7 @@ Setup on screen: **left window = Strike app**, **right window = "Wavelength" sto
 
 ## Out of scope (deliberately not building)
 
-- Real-merchant checkout (Amazon, ticketing, airlines) — mock storefront only; real merchants are the roadmap slide.
+- Real-merchant checkout (Amazon, ticketing, airlines) — Wavelength's additional catalogue items are visual merchant context only; AirPods Pro is the sole verified checkout path. Real merchants remain the roadmap slide.
 - Prava Pay CLI/MCP path — **no sandbox exists for it (live cards)**; REST API + SDK only.
 - Recurring / multi-fire mandates — single-use only.
 - More than one trigger type live — price-drop is the demo; restock/fare exist only as disabled UI options to show extensibility.

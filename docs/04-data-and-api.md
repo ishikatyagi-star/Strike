@@ -71,6 +71,7 @@ Error envelope everywhere: `{ "error": { "code": "UPPER_SNAKE", "message": "huma
 ### Wavelength — `/store/api/*`
 | Endpoint | Auth | Req → Resp | Errors |
 |---|---|---|---|
+| `GET /store/api/catalog` | public | → `[{sku,name,image_url,price_cents,sticker_cents,category,in_stock,verified_checkout}]`; simulator/catalog context. `verified_checkout=true` only for AirPods in v1. | — |
 | `GET /store/api/products/:sku` | public | → `{sku,name,price_cents,in_stock,image_url}` | `NOT_FOUND` |
 | `POST /store/api/quote` | public | `{sku,quantity}` → `{total_cents, quoted_at}` (live price × qty; no tax/shipping v1) | `OUT_OF_STOCK` |
 | `POST /store/api/checkout` | public + **`Idempotency-Key` header REQUIRED** | `{sku,quantity,amount_cents,card:{pan,cvv,expiry}}` → `{order_id,status:'captured',amount_cents}`. Validates amount == live total (else `AMOUNT_MISMATCH` 402 — merchant-overcharge row), Luhn + expiry sanity. **Duplicate key ⇒ 200 with the original order** (crash-safe replay). PAN/CVV used in-memory only. | `AMOUNT_MISMATCH` (402), `OUT_OF_STOCK` (409), `CARD_INVALID` (402), `IDEMPOTENCY_KEY_REQUIRED` (400) |

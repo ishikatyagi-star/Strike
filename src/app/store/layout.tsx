@@ -34,20 +34,28 @@ const css = `
   align-items:center;justify-content:center;font-weight:700;flex:none;}
 .wv-confirm-title{font-weight:700;font-size:15px;}
 .wv-confirm-sub{color:#5a6672;font-size:13.5px;margin-top:2px;font-variant-numeric:tabular-nums;}
+.wv-catalog{margin-top:56px;padding-top:28px;border-top:1px solid #eef1f5;}
+.wv-catalog-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;}
+.wv-catalog-head h2{margin:0;font-size:22px;letter-spacing:-.02em;}.wv-catalog-head span{color:#8a94a1;font-size:12px;}
+.wv-catalog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.wv-product-card{border:1px solid #e8edf3;border-radius:14px;padding:12px;}.wv-product-card img{width:100%;aspect-ratio:1.18;object-fit:contain;background:#f4f6f9;border-radius:10px;}
+.wv-product-name{font-size:13px;font-weight:650;margin-top:10px;}.wv-product-price{font-size:15px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;}.wv-product-note{font-size:10.5px;color:#8a94a1;margin-top:4px;}
 .wv-card{background:#fff;border:1px solid #eef1f5;border-radius:16px;padding:24px;margin-top:28px;
   box-shadow:0 4px 24px rgba(16,20,24,.05);}
 .wv-locked h2{margin:0 0 8px;font-size:18px;}
 .wv-locked code{background:#f4f6f9;padding:2px 6px;border-radius:6px;font-size:13px;}
 .wv-admin-price{font-size:15px;color:#5a6672;margin-bottom:16px;}
 .wv-admin-price b{color:#101418;font-size:18px;font-variant-numeric:tabular-nums;}
+.wv-admin-products{display:grid;gap:12px;}.wv-admin-product{border:1px solid #eef1f5;border-radius:12px;padding:14px;display:grid;grid-template-columns:minmax(140px,1fr) 1.5fr;gap:14px;align-items:center;}
+.wv-admin-product b{display:block;font-size:14px;}.wv-admin-product span{display:block;color:#6b7684;font-size:12px;margin-top:3px;font-variant-numeric:tabular-nums;}
 .wv-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .wv-btn{border:1px solid #d7dee7;background:#fff;border-radius:12px;padding:14px 16px;font-size:14px;
   font-weight:600;cursor:pointer;color:#101418;transition:border-color .15s ease;}
 .wv-btn:hover:not(:disabled){border-color:#0A57FF;}
 .wv-btn:disabled{opacity:.5;cursor:default;}
 .wv-btn.drop{background:#e5484d;border-color:#e5484d;color:#fff;font-size:15px;}
-.wv-btn.reset{color:#6b7684;}
-@media (max-width:760px){.wv-main{grid-template-columns:1fr;}.wv-admin-grid{grid-template-columns:1fr;}}
+.wv-btn.reset{color:#6b7684;margin-top:16px;}
+@media (max-width:760px){.wv-main{grid-template-columns:1fr;}.wv-admin-grid{grid-template-columns:1fr;}.wv-catalog-grid{grid-template-columns:1fr 1fr;}.wv-admin-product{grid-template-columns:1fr;}}
 `;
 
 export default function StoreLayout({ children }: { children: ReactNode }) {

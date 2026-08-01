@@ -13,33 +13,44 @@ export const WAVELENGTH_MERCHANT = {
   country: "US",
 } as const;
 
-export const SEED_PRODUCT = {
-  sku: "airpods-pro",
-  name: "AirPods Pro",
-  imageUrl: "/products/airpods-pro.svg",
-  priceCents: 19900, // $199.00 sticker
-} as const;
+export const SEED_PRODUCTS = [
+  { sku: "airpods-pro", name: "AirPods Pro", imageUrl: "/products/airpods-pro.svg", priceCents: 19900, category: "Audio · verified checkout" },
+  { sku: "quiet-desk", name: "Quiet Desk Lamp", imageUrl: "/products/quiet-desk.svg", priceCents: 8900, category: "Home · catalog preview" },
+  { sku: "arc-speaker", name: "Arc Mini Speaker", imageUrl: "/products/arc-speaker.svg", priceCents: 12900, category: "Audio · catalog preview" },
+  { sku: "orbit-charger", name: "Orbit Charging Stand", imageUrl: "/products/orbit-charger.svg", priceCents: 7900, category: "Accessories · catalog preview" },
+  { sku: "field-notes", name: "Field Notes Set", imageUrl: "/products/field-notes.svg", priceCents: 2400, category: "Desk · catalog preview" },
+] as const;
+
+// AirPods remains the one fully verified end-to-end merchant flow for the demo (Doc 1).
+export const SEED_PRODUCT = SEED_PRODUCTS[0];
 
 export function ensureSeed(): void {
   const db = storeDb();
-  const existing = db.select().from(products).where(eq(products.sku, SEED_PRODUCT.sku)).all();
-  if (existing.length === 0) {
-    db.insert(products)
-      .values({
-        sku: SEED_PRODUCT.sku,
-        name: SEED_PRODUCT.name,
-        imageUrl: SEED_PRODUCT.imageUrl,
-        priceCents: SEED_PRODUCT.priceCents,
-        inStock: true,
-        updatedAt: new Date().toISOString(),
-      })
-      .run();
+  for (const product of SEED_PRODUCTS) {
+    const existing = db.select().from(products).where(eq(products.sku, product.sku)).get();
+    if (!existing) {
+      db.insert(products)
+        .values({
+          sku: product.sku,
+          name: product.name,
+          imageUrl: product.imageUrl,
+          priceCents: product.priceCents,
+          inStock: true,
+          updatedAt: new Date().toISOString(),
+        })
+        .run();
+    }
   }
 }
 
 export function getProduct(sku: string) {
   ensureSeed();
   return storeDb().select().from(products).where(eq(products.sku, sku)).get();
+}
+
+export function listProducts() {
+  ensureSeed();
+  return storeDb().select().from(products).all();
 }
 
 export function latestOrder() {
@@ -65,10 +76,12 @@ export function resetStore(): void {
   const db = storeDb();
   db.delete(orders).run();
   ensureSeed();
-  db.update(products)
-    .set({ priceCents: SEED_PRODUCT.priceCents, inStock: true, updatedAt: new Date().toISOString() })
-    .where(eq(products.sku, SEED_PRODUCT.sku))
-    .run();
+  for (const product of SEED_PRODUCTS) {
+    db.update(products)
+      .set({ priceCents: product.priceCents, inStock: true, updatedAt: new Date().toISOString() })
+      .where(eq(products.sku, product.sku))
+      .run();
+  }
 }
 
 // ---- card checks (demo-grade). PAN/CVV are used in-memory only; last4 is the max we keep (Never #3). ----

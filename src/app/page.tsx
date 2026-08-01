@@ -35,7 +35,7 @@ export default function MandateBook() {
     <main className="mx-auto w-full max-w-3xl px-6 py-14">
       <header className="flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Strike<span className="text-strike">.</span></h1>
-        <div className="flex gap-4"><Link href="/setup" className="text-[13px] text-link">Setup</Link><Link href="/new" className="text-[13px] text-link">New mandate →</Link></div>
+        <div className="flex gap-4"><Link href="/setup" className="text-[13px] text-link">Setup</Link><Link href="/demo" className="text-[13px] text-link">Demo cockpit</Link><Link href="/new" className="text-[13px] text-link">New mandate →</Link></div>
       </header>
       <p className="mt-2 text-[14px] text-muted">Conditional purchase mandates, live against the market.</p>
       {error && <p className="mt-6 rounded border border-danger/30 bg-danger/5 px-3 py-2 text-[13px] text-danger">Showing the last good state · {error}</p>}
