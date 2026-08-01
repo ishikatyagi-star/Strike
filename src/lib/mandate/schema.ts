@@ -29,7 +29,8 @@ export function validateDraftSemantics(input: DraftInputT, nowMs = Date.now()): 
   if (Number.isNaN(until)) return "VALIDATION_FAILED";
   if (until <= nowMs) return "VALIDATION_FAILED"; // must be in the future
   if (until - nowMs > MAX_HORIZON_DAYS * 864e5) return "VALIDATION_FAILED"; // ≤ 7 days
-  // cap must be at least the trigger price (buying under the trigger must fit under the cap)
-  if (input.max_total_cents < input.condition.price_cents) return "VALIDATION_FAILED";
+  // The trigger is a watch condition; the cap is the independent maximum total the user permits.
+  // A cap below a price trigger is both valid (the executor re-arms on ordinary slippage) and is
+  // how M6 proves Prava's network guardrail when DEMO_BYPASS_GATE is enabled.
   return null;
 }

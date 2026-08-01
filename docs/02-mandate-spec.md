@@ -44,6 +44,7 @@ Two zones: **SIGNED** fields are immutable after signing and covered by the pass
 
 Rules:
 - `price_below` fires when the merchant's **listed item price** for `item.sku` < `price_cents` AND the item is purchasable (in stock). Currency is the mandate's currency — no FX in v1.
+- `price_cents` is a **watch trigger**, while `max_total_cents` is an independent signed spending ceiling; they are not required to have an ordering. If a live price meets the trigger but exceeds the cap, normal execution aborts and re-arms before Line P. In the `DEMO_BYPASS_GATE` decline proof only, that app-layer cap check is skipped so Prava can prove its independently enforced mandate cap with `THRESHOLD_EXCEEDED`.
 - `back_in_stock` fires on availability flipping to purchasable. Schema-complete; UI shows it disabled ("coming soon") for the demo.
 - `fare_below` is schema-only in v1 (validation rejects it); it exists to show the union extends beyond retail.
 - **Extensibility:** because predicates are a tagged union, a future v2 wraps them in `{"all": [...]}/{"any": [...]}` combinator nodes without re-signing semantics changing — the signed bytes are still one canonical tree. Noted in the doc, not built.
