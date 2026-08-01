@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Strike
 
-## Getting Started
+Conditional purchase mandates on Prava rails. A user signs one passkey-bound mandate for a named item, merchant, cap, trigger, and expiry; Strike watches the merchant and executes only when the signed condition is true.
 
-First, run the development server:
+The product contract and demo script live in [`docs/`](docs/). Those documents take precedence over this runbook.
+
+## Run locally
+
+Use npm and start the app with:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000/setup` first to register the platform passkey. Then use `http://localhost:3000/new` to draft, sign, and arm a mandate. The Wavelength price lever is at `/store/admin` after signing in through its documented local admin route.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Required local configuration remains in `.env.local`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+PRAVA_SECRET_KEY=sk_test_...
+PRAVA_BASE_URL=https://sandbox.api.prava.space
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-4o-mini
+LLM_MODE=fixture
+DEMO=0
+WATCHER=1
+STORE_ADMIN_KEY=...
+```
 
-## Learn More
+Only sandbox (`sk_test_`) Prava keys are accepted. `LLM_MODE=fixture` keeps natural-language drafting and narration deterministic if the OpenAI API is unavailable.
 
-To learn more about Next.js, take a look at the following resources:
+## Three-minute demo run
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Start at `/new`; create the $180 AirPods mandate, sign with Touch ID, then approve the one-time Prava mandate.
+2. Open its detail timeline at `/m/[id]`; show **Armed — watching** at the $199 price.
+3. In a second window, use the Wavelength admin lever to drop to $174. The timeline should show **STRUCK → token minted → PAID**.
+4. Open the verifiable receipt and download its JSON bundle.
+5. For the decline beat, use a freshly armed mandate whose true trigger is above its signed cap, set `DEMO=1`, and use **Prove network cap** after the price crosses its trigger. The app still re-verifies the passkey signature; only its app-layer cap comparison is bypassed, so Prava returns the real `THRESHOLD_EXCEEDED` refusal.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Do not use a completed mandate for the decline beat: its one-time Prava mandate has already been consumed. Keep a separately armed mandate available for the one-tap revoke demonstration.
 
-## Deploy on Vercel
+## Safety properties
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Every Prava charge runs through `verifyMandateForExecution()` in the executor call stack.
+- The LLM only drafts and narrates; it cannot trigger, approve, or execute a payment.
+- Card credentials exist in memory only; persisted data is limited to the final four digits.
+- Status changes and audit events commit together, and the audit table is append-only.
