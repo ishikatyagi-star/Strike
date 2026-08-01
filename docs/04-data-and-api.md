@@ -68,11 +68,12 @@ Error envelope everywhere: `{ "error": { "code": "UPPER_SNAKE", "message": "huma
 ### Wavelength — `/store/api/*`
 | Endpoint | Auth | Req → Resp | Errors |
 |---|---|---|---|
-| `GET /store/api/products/:sku` | public | → `{sku,name,price_cents,in_stock}` | `NOT_FOUND` |
+| `GET /store/api/products/:sku` | public | → `{sku,name,price_cents,in_stock,image_url}` | `NOT_FOUND` |
 | `POST /store/api/quote` | public | `{sku,quantity}` → `{total_cents, quoted_at}` (live price × qty; no tax/shipping v1) | `OUT_OF_STOCK` |
 | `POST /store/api/checkout` | public + **`Idempotency-Key` header REQUIRED** | `{sku,quantity,amount_cents,card:{pan,cvv,expiry}}` → `{order_id,status:'captured',amount_cents}`. Validates amount == live total (else `AMOUNT_MISMATCH` 402 — merchant-overcharge row), Luhn + expiry sanity. **Duplicate key ⇒ 200 with the original order** (crash-safe replay). PAN/CVV used in-memory only. | `AMOUNT_MISMATCH` (402), `OUT_OF_STOCK` (409), `CARD_INVALID` (402), `IDEMPOTENCY_KEY_REQUIRED` (400) |
-| `POST /store/admin/price` | admin | `{sku, price_cents}` → product (the demo lever) | — |
-| `POST /store/admin/reset` | admin | restore seed state | — |
+| `GET /store/admin/login?key=` | public | valid `key` (=`STORE_ADMIN_KEY`) sets the admin cookie, 307→`/store/admin` (Doc 4 A3) | `UNAUTHORIZED` (401) |
+| `POST /store/admin/price` | admin | `{sku, price_cents, in_stock?}` → product (the demo lever) | `UNAUTHORIZED` (401), `NOT_FOUND` |
+| `POST /store/admin/reset` | admin | restore seed state (price→$199, in stock, orders cleared) | `UNAUTHORIZED` (401) |
 
 Money-path idempotency chain (Doc 3 §4): `execution_id` → Prava session idempotency key → store `Idempotency-Key`. No endpoint that moves money accepts a request without one.
 
