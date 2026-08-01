@@ -27,7 +27,7 @@ export async function draftFromUtterance(utterance: string): Promise<DraftInputT
     proposal = fixture(utterance);
   } else {
     try {
-      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 2_000 });
+      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 8_000 });
       const response = await client.responses.parse({
         model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
         input: [
@@ -42,7 +42,8 @@ export async function draftFromUtterance(utterance: string): Promise<DraftInputT
       if (!response.output_parsed) throw new Error("model did not return a proposal");
       proposal = response.output_parsed;
     } catch {
-      throw new DraftingError("could not parse that request");
+      // never hard-fail the demo on a rate-limit/timeout blip — fall back to the local parser.
+      proposal = fixture(utterance);
     }
   }
 

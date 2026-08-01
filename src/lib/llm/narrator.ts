@@ -13,7 +13,10 @@ function template(input: NarrationInput): string {
 }
 
 export async function narrate(input: NarrationInput): Promise<string> {
-  if (process.env.LLM_MODE === "fixture") return template(input);
+  // Off by default: this runs on every 2s detail poll, so live narration would hammer the OpenAI
+  // rate limit. The meaningful OpenAI use is the NL drafter (draftFromUtterance), which runs once
+  // per mandate. Set NARRATE_LIVE=1 only with a payment-method'd key (higher RPM).
+  if (process.env.NARRATE_LIVE !== "1") return template(input);
   try {
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 2_000 });
     const response = await client.responses.create({
