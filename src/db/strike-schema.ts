@@ -52,7 +52,7 @@ export const webauthnCredentials = sqliteTable("webauthn_credentials", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
-  publicKeyCose: blob("public_key_cose").notNull(),
+  publicKeyCose: blob("public_key_cose").$type<Buffer>().notNull(),
   signCount: integer("sign_count").notNull().default(0),
   createdAt: text("created_at").notNull(),
 });

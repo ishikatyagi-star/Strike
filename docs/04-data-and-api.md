@@ -56,7 +56,7 @@ Error envelope everywhere: `{ "error": { "code": "UPPER_SNAKE", "message": "huma
 | Endpoint | Auth | Req → Resp | Errors |
 |---|---|---|---|
 | `POST /api/webauthn/register/options` · `/verify` | session | standard @simplewebauthn shapes | `REG_FAILED` |
-| `POST /api/mandates/draft` | session | `{utterance}` *or* `{fields}` → `{mandate(draft), signed_zone, mandate_hash}` — LLM parse → Zod gate → persisted draft | `PARSE_FAILED`, `VALIDATION_FAILED` (422) |
+| `POST /api/mandates/draft` | session | `{utterance}` *or* `{fields}` → `{mandate(draft), signed_zone, mandate_hash, webauthn}` — LLM parse → Zod gate → persisted draft. `webauthn` = server-issued assertion options with `challenge` = base64url(mandate_hash), so challenge encoding stays server-authoritative (Doc 2 §1). | `PARSE_FAILED`, `VALIDATION_FAILED` (422) |
 | `POST /api/mandates/:id/sign` | session | `{assertion}` → `{mandate(armed)}` — runs Doc 2 §3.3; idempotent via nonce consumption (replays hit `NONCE_CONSUMED`) | `NONCE_EXPIRED`, `NONCE_CONSUMED` (409), `HASH_MISMATCH`, `BAD_SIGNATURE`, `ORIGIN_MISMATCH` (401) |
 | `GET /api/mandates` | session | → `[{mandate, latest_price, in_stock}]` | — |
 | `GET /api/mandates/:id` | session | → `{mandate, execution?, events[], narration}` | `NOT_FOUND` |

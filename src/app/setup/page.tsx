@@ -1,14 +1,26 @@
 // S0 · Setup — pre-flight checklist (Doc 5 §4). Never part of the 3-minute demo.
 // M0: env + DB checks are live; passkey/Prava items get wired in M1/M3.
+import type { ReactNode } from "react";
 import { strikeDb } from "@/db/client";
 import { webauthnCredentials } from "@/db/strike-schema";
 import { pravaConfigured } from "@/lib/prava";
+import { RegisterPasskey } from "./register";
 
 export const dynamic = "force-dynamic";
 
 type CheckState = "ok" | "pending" | "todo";
 
-function Check({ state, label, detail }: { state: CheckState; label: string; detail: string }) {
+function Check({
+  state,
+  label,
+  detail,
+  action,
+}: {
+  state: CheckState;
+  label: string;
+  detail: string;
+  action?: ReactNode;
+}) {
   const dot =
     state === "ok" ? "bg-strike" : state === "pending" ? "bg-warn" : "bg-line";
   const status =
@@ -20,9 +32,11 @@ function Check({ state, label, detail }: { state: CheckState; label: string; det
         <p className="text-[15px] font-medium">{label}</p>
         <p className="mt-0.5 text-[13px] text-muted">{detail}</p>
       </div>
-      <span className={`num text-xs uppercase tracking-wider ${status}`}>
-        {state === "ok" ? "ready" : state === "pending" ? "action needed" : "wired later"}
-      </span>
+      {action ?? (
+        <span className={`num text-xs uppercase tracking-wider ${status}`}>
+          {state === "ok" ? "ready" : state === "pending" ? "action needed" : "wired later"}
+        </span>
+      )}
     </li>
   );
 }
@@ -64,9 +78,10 @@ export default async function SetupPage() {
           detail="OPENAI_API_KEY present — NL drafting; fixture mode covers its absence"
         />
         <Check
-          state={passkeyRegistered ? "ok" : "todo"}
+          state={passkeyRegistered ? "ok" : "pending"}
           label="Passkey registered"
-          detail="Touch ID credential enrolled (M3) — the only thing that can sign a mandate"
+          detail="Touch ID credential enrolled — the only thing that can sign a mandate"
+          action={<RegisterPasskey registered={passkeyRegistered} />}
         />
         <Check
           state="todo"
