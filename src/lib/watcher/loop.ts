@@ -30,6 +30,19 @@ export async function runTickOnce(): Promise<TickResult> {
     const obs = await wavelengthAdapter.observe(m.itemSku);
     if (!obs) continue;
     const snap = recordSnapshot(m.merchantId, m.itemSku, obs);
+    const condition = JSON.parse(m.conditionJson) as { type?: string; price_cents?: number };
+    // Beat 5 must be user-triggered, not a race with the ordinary executor. In demo mode only,
+    // retain an over-cap mandate in armed state once its price condition is true; the detail UI
+    // then calls /demo-decline, which enters the same trigger + gated executor path with only the
+    // app-layer cap check bypassed. Production watcher behavior is unaffected.
+    const holdsForDeclineProof = process.env.DEMO === "1"
+      && condition.type === "price_below"
+      && typeof condition.price_cents === "number"
+      && m.maxTotalCents < condition.price_cents;
+    if (holdsForDeclineProof) {
+      fired.push({ mandate: m.id, price_cents: obs.price_cents, outcome: "no_match" });
+      continue;
+    }
     const { outcome, executionId } = evaluateAndTrigger({ id: m.id, conditionJson: m.conditionJson, quantity: m.quantity }, snap);
     fired.push({ mandate: m.id, price_cents: obs.price_cents, outcome });
     if (outcome === "triggered" && executionId) {
