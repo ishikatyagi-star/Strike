@@ -239,26 +239,30 @@ you can never be double-charged across merchants. The user picks *who they trust
 to buy from* as a first-class, signed part of the mandate — the merchant
 allow-list is part of what the network enforces, not a suggestion.
 
-### 2. The **Compose** connector layer — an adapter architecture for any merchant
+### 2. **Composio** as the merchant gateway — one integration, many merchants
 
-The core spend gate is merchant-agnostic. Production adds **Compose**, a
-connector layer that plugs real merchants into the same gate through a uniform
-adapter interface:
+The core spend gate is merchant-agnostic. Production connects real merchants
+through **[Composio](https://composio.dev)** — a gateway that exposes many
+merchant/tool integrations behind one uniform interface — mapped onto a thin
+internal adapter contract:
 
-- Each merchant (Amazon, Flipkart, apple.com, ticketing, airlines, …) is an
-  **adapter** exposing three operations: `quote(item) → price`,
-  `checkout(credential, item) → order`, and `verifyItem(spec) → match`.
+- Strike defines one adapter contract — `quote(item) → price`,
+  `checkout(credential, item) → order`, `verifyItem(spec) → match` — and
+  **Composio** provides the connections behind it (Amazon, Flipkart, apple.com,
+  ticketing, airlines, …). One integration surface instead of N bespoke ones.
 - The watcher, spend gate, executor, and audit log **never change** — they call
-  the adapter interface, exactly as they call the Wavelength adapter today.
-- Adapters are UCP-compatible where the merchant supports it, and use Prava's
-  browser-harness / agentic-checkout surface where it doesn't. Adding a merchant
-  is writing one adapter, not touching the safety core.
+  the adapter contract, exactly as they call the Wavelength adapter today.
+- Where a merchant is UCP-compatible we use that directly; otherwise Composio
+  (or Prava's browser-harness / agentic-checkout surface) fulfills the checkout.
+  Adding a merchant is a configuration in the gateway, not a change to the safety
+  core.
 - **Result: universal reach.** Anyone can pre-commit to any purchase safely,
   because the trust boundary (signed mandate + network-scoped credential) is
   independent of which merchant fulfills it.
 
-*(We don't name-drop integrations we haven't built. Amazon/Flipkart/apple.com
-are illustrative adapter targets on the roadmap, not current integrations.)*
+*(Composio is a planned production integration, not a current one — Amazon /
+Flipkart / apple.com are illustrative targets reachable through the gateway, not
+integrations shipped in this hackathon build.)*
 
 ### 3. Production Prava + real settlement
 
