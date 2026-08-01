@@ -45,18 +45,28 @@ const GREEN_EV = new Set(["MANDATE_ARMED", "CONDITION_TRIGGERED", "PRAVA_CALL", 
 const RED_EV = new Set(["EXECUTION_FAILED", "MANDATE_REVOKED"]);
 const AMBER_EV = new Set(["EXECUTION_ABORTED", "MANDATE_EXPIRED"]);
 
-function evColor(t: string) {
-  if (t === "EXECUTION_FULFILLED") return "text-strike";
-  if (GREEN_EV.has(t)) return "text-strike";
-  if (RED_EV.has(t)) return "text-danger";
-  if (AMBER_EV.has(t)) return "text-warn";
+function pravaRefused(e: Ev) {
+  return e.event_type === "PRAVA_CALL" && e.payload.status === "failed";
+}
+function evColor(e: Ev) {
+  if (pravaRefused(e)) return "text-danger";
+  if (e.event_type === "EXECUTION_FULFILLED") return "text-strike";
+  if (GREEN_EV.has(e.event_type)) return "text-strike";
+  if (RED_EV.has(e.event_type)) return "text-danger";
+  if (AMBER_EV.has(e.event_type)) return "text-warn";
   return "text-ink";
 }
-function evDot(t: string) {
-  if (GREEN_EV.has(t)) return "bg-strike";
-  if (RED_EV.has(t)) return "bg-danger";
-  if (AMBER_EV.has(t)) return "bg-warn";
+function evDot(e: Ev) {
+  if (pravaRefused(e)) return "bg-danger";
+  if (GREEN_EV.has(e.event_type)) return "bg-strike";
+  if (RED_EV.has(e.event_type)) return "bg-danger";
+  if (AMBER_EV.has(e.event_type)) return "bg-warn";
   return "bg-line";
+}
+
+function evLabel(e: Ev) {
+  if (pravaRefused(e)) return "Prava — charge refused";
+  return LABEL[e.event_type] ?? e.event_type;
 }
 
 function evDetail(e: Ev): string {
@@ -65,7 +75,7 @@ function evDetail(e: Ev): string {
     const s = p.snapshot as { price_cents?: number } | undefined;
     return s?.price_cents != null ? `observed ${usd(s.price_cents)}` : "";
   }
-  if (e.event_type === "PRAVA_CALL") return typeof p.transaction_id === "string" ? String(p.transaction_id) : "";
+  if (e.event_type === "PRAVA_CALL") return typeof p.error === "string" ? p.error : typeof p.transaction_id === "string" ? String(p.transaction_id) : "";
   if (e.event_type === "EXECUTION_FULFILLED") {
     const amt = typeof p.amount_cents === "number" ? usd(p.amount_cents) : "";
     const l4 = typeof p.token_last4 === "string" ? ` · card ••••${p.token_last4}` : "";
@@ -183,10 +193,10 @@ export default function MandateDetail({ params }: { params: Promise<{ id: string
           const detail = evDetail(e);
           return (
             <li key={e.seq} className="relative py-3 pl-6">
-              <span className={`absolute -left-[5px] top-4 h-[9px] w-[9px] rounded-full ${evDot(e.event_type)}`} />
+              <span className={`absolute -left-[5px] top-4 h-[9px] w-[9px] rounded-full ${evDot(e)}`} />
               <div className="flex items-baseline justify-between gap-3">
-                <span className={`text-[14px] font-medium ${evColor(e.event_type)}`}>
-                  {LABEL[e.event_type] ?? e.event_type}
+                <span className={`text-[14px] font-medium ${evColor(e)}`}>
+                  {evLabel(e)}
                   {e.event_type === "EXECUTION_FULFILLED" && detail ? ` ${detail.split(" · ")[0]}` : ""}
                 </span>
                 <span className="num shrink-0 text-[11px] text-muted">{new Date(e.created_at).toLocaleTimeString()}</span>
