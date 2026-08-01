@@ -4,6 +4,10 @@
 > signature, a precise conditional mandate, then Prava enforces the final
 > merchant, amount, and single-use boundary — even if our app misbehaves.**
 
+**Repository:** https://github.com/ishikatyagi-star/Strike
+**Run / judge access:** `npm install && npm run dev` → open `http://localhost:3000/demo`
+(sandbox keys required in `.env.local`; see *Repository & how to run* below).
+
 ---
 
 ## Name
@@ -297,6 +301,84 @@ sole authority.
 Real user accounts, a native mobile signing experience (passkeys are already
 mobile-native), and a push layer so "your mandate just executed while you slept"
 lands on your phone with the full receipt.
+
+---
+
+## Repository & how to run (judge access)
+
+**Repo:** https://github.com/ishikatyagi-star/Strike (public)
+
+```bash
+npm install
+# add sandbox creds to .env.local:
+#   PRAVA_SECRET_KEY=sk_test_...        (Prava sandbox)
+#   PRAVA_BASE_URL=https://sandbox.api.prava.space
+#   OPENAI_API_KEY=sk-...               (optional — LLM drafting; falls back locally)
+#   STORE_ADMIN_KEY=local-dev
+npm run dev            # boots Strike + Wavelength + watcher on :3000
+```
+
+Then open **`http://localhost:3000/demo`** — the operator cockpit. The core flow:
+
+1. Compose a mandate in natural language on `/new` (or use the seeded one).
+2. Sign with Touch ID → **Arm on Prava** (one passkey approval).
+3. Drop the price with the Wavelength merchant lever → watcher fires within ~3s.
+4. Headless Prava charge → Wavelength checkout → **PAID**, full audit timeline.
+5. Decline beat: a cap-under-price mandate → real Visa **DECLINED** in the log.
+
+To **watch** rather than run: the demo video (above) is the same flow end-to-end.
+To **verify integrations**: the real transaction IDs in *Prava transaction
+evidence* above can be traced through the `audit_events` table in `strike.db`.
+
+Sandbox only — no production keys anywhere in the repo (`.env*` is gitignored;
+databases are not committed). The sandbox test card is entered only on Prava's
+hosted surface, never in this repo, DB, or logs.
+
+---
+
+## What worked, what didn't, what we learned
+
+### What worked
+- **The full headless thesis runs live on real Prava/Visa sandbox rails** — sign
+  once, walk away, and an autonomous watcher completes the purchase with no human
+  in the loop. Real passkey, real network-scoped single-use credential, real
+  order. (Evidence above.)
+- **The decline is real, not staged.** An over-cap charge is refused by Visa at
+  mint time with a real `visaCorrelationId` — the safety property is enforced by
+  the network, not asserted by our code.
+- **The single-gate architecture held.** Every spend path funnels through one
+  `verifyMandateForExecution()` choke point, lint-enforced, with the LLM boundary
+  kept entirely out of the authorization path.
+- **Idempotency & crash-safety.** `execution_id` as the idempotency key end-to-end
+  (Prava charge + merchant checkout), plus a recovery scan on boot, so a restart
+  mid-flight never double-charges.
+
+### What didn't (and how we handled it)
+- **Prava's MCP/CLI path can't do headless charging** in sandbox — mandate
+  charging is deliberately excluded from MCP and there's no sandbox for the live
+  CLI. We discovered this early and committed to the **REST one-time Mandate**
+  path instead (`POST /v1/mandates/{id}/charge`), which is the correct headless
+  primitive.
+- **The saved-card session flow requires a passkey tap on *every* payment** — it
+  can't be toggled off — which would have broken "no human after signing." The
+  one-time Mandate (approved once at arm time) is what makes the autonomy real.
+- **OpenAI free-tier daily quota** throttled live drafting during the build; we
+  designed the drafter to **fall back to a deterministic local parser** on any
+  error, so the creation flow never hard-fails regardless of quota.
+- **Real-merchant checkout is out of scope for 48h** — we were honest and built
+  Wavelength as a deterministic stage merchant rather than faking an Amazon
+  integration, and labeled non-checkout products as "catalog context only."
+
+### What we learned
+- The scarce, defensible primitive in agentic commerce isn't *finding* the deal —
+  it's a **signed, bounded pre-commitment the network itself enforces**. Getting
+  the trust boundary right (signature + scoped credential) matters more than
+  merchant breadth, and it's what makes the rest safe to scale.
+- **Honesty is part of the pitch.** Saying out loud "the store is ours; the
+  payment is 100% real" makes the demo *more* credible, not less — judges trust
+  a team that names its own simulated surfaces.
+- Designing the merchant as an **adapter from day one** meant the production path
+  (Composio gateway → any merchant) is a configuration surface, not a rewrite.
 
 ---
 
