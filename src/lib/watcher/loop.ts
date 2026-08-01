@@ -1,0 +1,43 @@
+// The 3s poll loop (Doc 3 §3). Runs in the Next.js Node runtime, started once from
+// instrumentation.ts. Leader lease is hygiene; the trigger CAS is the real single-fire lock.
+import { eq } from "drizzle-orm";
+import { strikeDb } from "@/db/client";
+import { mandates } from "@/db/strike-schema";
+import { wavelengthAdapter } from "./adapter";
+import { recordSnapshot } from "./snapshots";
+import { evaluateAndTrigger, type TriggerOutcome } from "./trigger";
+import { acquireOrRenew } from "./lease";
+
+const TICK_MS = 3000;
+
+export interface TickResult {
+  leader: boolean;
+  armed: number;
+  fired: { mandate: string; price_cents: number; outcome: TriggerOutcome }[];
+}
+
+export async function runTickOnce(): Promise<TickResult> {
+  if (!acquireOrRenew()) return { leader: false, armed: 0, fired: [] };
+  const db = strikeDb();
+  const now = new Date().toISOString();
+  const armed = db.select().from(mandates).where(eq(mandates.status, "armed")).all();
+  const fired: TickResult["fired"] = [];
+  for (const m of armed) {
+    if (m.validUntil <= now || m.validFrom > now) continue; // out of window; sweeper handles expiry (M6)
+    const obs = await wavelengthAdapter.observe(m.itemSku);
+    if (!obs) continue;
+    const snap = recordSnapshot(m.merchantId, m.itemSku, obs);
+    const outcome = evaluateAndTrigger({ id: m.id, conditionJson: m.conditionJson, quantity: m.quantity }, snap);
+    fired.push({ mandate: m.id, price_cents: obs.price_cents, outcome });
+  }
+  return { leader: true, armed: armed.length, fired };
+}
+
+const g = globalThis as unknown as { __watcher?: ReturnType<typeof setInterval> };
+
+export function startWatcher() {
+  if (g.__watcher) return; // survive hot reload — one interval per process
+  g.__watcher = setInterval(() => {
+    runTickOnce().catch(() => {});
+  }, TICK_MS);
+}
