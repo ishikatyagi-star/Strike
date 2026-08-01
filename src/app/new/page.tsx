@@ -1,6 +1,6 @@
 "use client";
 // S1 · Create mandate (Doc 5). Form → ScopeCard (rendered from the exact SIGNED bytes the server
-// hashed) → passkey sign. "What you see is what you sign" (Doc 2 §3.2).
+// hashed) → passkey sign → arm on Prava. "What you see is what you sign" (Doc 2 §3.2).
 import { useState } from "react";
 import { startAuthentication } from "@simplewebauthn/browser";
 
@@ -17,7 +17,7 @@ type SignedZone = {
   mode: string;
 };
 type Draft = { mandate: { id: string; status: string }; signed_zone: SignedZone; mandate_hash: string; webauthn: unknown };
-type Phase = "form" | "drafting" | "review" | "signing" | "armed" | "error";
+type Phase = "form" | "drafting" | "review" | "signing" | "signed" | "arming" | "armed" | "error";
 
 export default function NewMandate() {
   const [trigger, setTrigger] = useState(180);
@@ -27,6 +27,7 @@ export default function NewMandate() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [phase, setPhase] = useState<Phase>("form");
   const [err, setErr] = useState("");
+  const [armMsg, setArmMsg] = useState("");
 
   async function makeDraft() {
     setPhase("drafting");
@@ -61,11 +62,35 @@ export default function NewMandate() {
         setPhase("error");
         return;
       }
-      setPhase("armed");
+      setPhase("signed");
     } catch (e) {
       setErr((e as Error).message);
       setPhase("error");
     }
+  }
+
+  async function arm() {
+    if (!draft) return;
+    setPhase("arming");
+    setArmMsg("Opening Prava approval…");
+    const res = await (await fetch(`/api/mandates/${draft.mandate.id}/arm`, { method: "POST" })).json();
+    if (res.error || !res.approval_url) {
+      setErr(res.error ? `${res.error.code}: ${res.error.message}` : "could not start arming");
+      setPhase("error");
+      return;
+    }
+    window.open(res.approval_url, "_blank", "noopener"); // approve card + passkey on Prava's surface
+    setArmMsg("Approve the mandate on Prava (opened in a new tab). Waiting for it to go active…");
+    // poll confirm-arm until active (~2 min budget)
+    for (let i = 0; i < 60; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const c = await (await fetch(`/api/mandates/${draft.mandate.id}/confirm-arm`, { method: "POST" })).json();
+      if (c.status === "armed") {
+        setPhase("armed");
+        return;
+      }
+    }
+    setArmMsg("Still not active. Approve on Prava, then click ‘Check again’.");
   }
 
   return (
@@ -85,11 +110,7 @@ export default function NewMandate() {
           <div className="mt-3 text-[13px] text-muted">
             AirPods Pro · Wavelength — buy <b className="text-ink">1</b> if the price drops under <b className="text-strike">{usd(Math.round(trigger * 100))}</b>, spending at most <b className="text-ink">{usd(Math.round(cap * 100))}</b>, within {days} days.
           </div>
-          <button
-            onClick={makeDraft}
-            disabled={phase === "drafting"}
-            className="mt-5 w-full rounded bg-strike/10 py-3 text-[15px] font-semibold text-strike ring-1 ring-inset ring-strike/30 hover:bg-strike/15 disabled:opacity-50"
-          >
+          <button onClick={makeDraft} disabled={phase === "drafting"} className="mt-5 w-full rounded bg-strike/10 py-3 text-[15px] font-semibold text-strike ring-1 ring-inset ring-strike/30 hover:bg-strike/15 disabled:opacity-50">
             {phase === "drafting" ? "Preparing…" : "Review scope"}
           </button>
           {phase === "error" && <p className="mt-3 text-[13px] text-danger">{err}</p>}
@@ -100,24 +121,40 @@ export default function NewMandate() {
         <div className="mt-8">
           <ScopeCard z={draft.signed_zone} hash={draft.mandate_hash} />
           <p className="mt-3 text-center text-[12px] text-muted">What you see is what you sign — this exact scope is hashed and covered by your passkey.</p>
-          <button
-            onClick={sign}
-            disabled={phase === "signing"}
-            className="mt-4 w-full rounded bg-ink py-3 text-[15px] font-semibold text-bg hover:opacity-90 disabled:opacity-60"
-          >
+          <button onClick={sign} disabled={phase === "signing"} className="mt-4 w-full rounded bg-ink py-3 text-[15px] font-semibold text-bg hover:opacity-90 disabled:opacity-60">
             {phase === "signing" ? "Waiting for Touch ID…" : "◉  Sign with Touch ID"}
           </button>
         </div>
       )}
 
-      {phase === "armed" && draft && (
-        <div className="mt-8 rounded-card border border-strike/40 bg-strike/5 p-6 text-center">
-          <div className="num text-xs uppercase tracking-[0.2em] text-strike">signed</div>
-          <h2 className="mt-2 text-xl font-semibold">Mandate signed ✓</h2>
-          <p className="mt-1 text-[14px] text-muted">Your passkey signature is bound to the exact scope above. Next: arm it on Prava (creates the one-time payment mandate).</p>
-          <div className="num mt-4 break-all text-[11px] text-muted">{draft.mandate_hash}</div>
+      {(phase === "signed" || phase === "arming") && draft && (
+        <div className="mt-8">
+          <div className="rounded-card border border-strike/40 bg-strike/5 p-6 text-center">
+            <div className="num text-xs uppercase tracking-[0.2em] text-strike">signed</div>
+            <h2 className="mt-2 text-xl font-semibold">Mandate signed ✓</h2>
+            <p className="mt-1 text-[14px] text-muted">Your passkey signature is bound to the exact scope. One more step: authorize the payment on Prava (a scoped, one-time mandate).</p>
+          </div>
+          {phase === "signed" ? (
+            <button onClick={arm} className="mt-4 w-full rounded bg-ink py-3 text-[15px] font-semibold text-bg hover:opacity-90">◉  Arm on Prava →</button>
+          ) : (
+            <div className="mt-4 rounded-card border border-line bg-surface p-5 text-center">
+              <p className="text-[14px]">{armMsg}</p>
+              <button onClick={arm} className="mt-3 text-[13px] text-link hover:underline">Check again</button>
+            </div>
+          )}
         </div>
       )}
+
+      {phase === "armed" && draft && (
+        <div className="mt-8 rounded-card border border-strike/40 bg-strike/5 p-6 text-center">
+          <div className="num text-xs uppercase tracking-[0.2em] text-strike">armed</div>
+          <h2 className="mt-2 text-xl font-semibold">Armed — watching ✓</h2>
+          <p className="mt-1 text-[14px] text-muted">No card is on file anywhere. Strike is watching the price; it executes the instant your condition fires.</p>
+          <a href={`/m/${draft.mandate.id}`} className="mt-4 inline-block rounded bg-ink px-5 py-2.5 text-[14px] font-semibold text-bg hover:opacity-90">View live →</a>
+        </div>
+      )}
+
+      {phase === "error" && draft && <p className="mt-3 text-center text-[13px] text-danger">{err}</p>}
     </main>
   );
 }
@@ -128,14 +165,7 @@ function NumField({ label, prefix, value, onChange, min = 0, max = 100000 }: { l
       <span className="text-[12px] text-muted">{label}</span>
       <div className="mt-1 flex items-center rounded border border-line bg-bg px-3 py-2 focus-within:border-strike">
         {prefix && <span className="mr-1 text-muted">{prefix}</span>}
-        <input
-          type="number"
-          value={value}
-          min={min}
-          max={max}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="num w-full bg-transparent text-[15px] outline-none"
-        />
+        <input type="number" value={value} min={min} max={max} onChange={(e) => onChange(Number(e.target.value))} className="num w-full bg-transparent text-[15px] outline-none" />
       </div>
     </label>
   );
