@@ -37,6 +37,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       signed_at: m.signedAt,
       resolved_at: m.resolvedAt,
       armed_on_prava: Boolean(m.pravaMandateId),
+      demo_decline_available: process.env.DEMO === "1",
     },
     execution: ex
       ? {

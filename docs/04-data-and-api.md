@@ -63,6 +63,7 @@ Error envelope everywhere: `{ "error": { "code": "UPPER_SNAKE", "message": "huma
 | `GET /api/mandates` | session | → `[{mandate, latest_price, in_stock}]` | — |
 | `GET /api/mandates/:id` | session | → `{mandate, execution?, events[], narration}` | `NOT_FOUND` |
 | `POST /api/mandates/:id/revoke` | session | → `{mandate}`; idempotent — already-revoked returns 200 with current state; fulfilled returns 409 `REVOKE_TOO_LATE` with the Line C timestamp | `REVOKE_TOO_LATE` (409) |
+| `POST /api/mandates/:id/demo-decline` | demo | → `{execution_id,result}`; only when `DEMO=1`, re-evaluates a live true condition then enters the normal executor with only its app-layer cap check bypassed. The signature gate, status, expiry and stock checks still run in the same call stack. Prava's `THRESHOLD_EXCEEDED` becomes the terminal `EXECUTION_FAILED` event. | `DEMO_ONLY` (404), `CONDITION_NOT_MET` (409), `NOT_EXECUTABLE` (409), `PRICE_UNAVAILABLE` (502) |
 | `GET /api/mandates/:id/receipt` | session | → verifiable bundle (§4) | `NOT_FOUND` |
 | `GET /api/events?after=seq` | session | → `{events[], cursor}` — 2 s UI poll drives all live screens | — |
 | `POST /api/demo/reset` | demo | reseed both DBs, price→$199 | — |

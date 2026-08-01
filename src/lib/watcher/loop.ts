@@ -8,6 +8,7 @@ import { recordSnapshot } from "./snapshots";
 import { evaluateAndTrigger, type TriggerOutcome } from "./trigger";
 import { acquireOrRenew } from "./lease";
 import { executeExecution } from "@/lib/executor/execute";
+import { sweepExpiredMandates } from "./expiry";
 
 const TICK_MS = 3000;
 
@@ -19,6 +20,7 @@ export interface TickResult {
 
 export async function runTickOnce(): Promise<TickResult> {
   if (!acquireOrRenew()) return { leader: false, armed: 0, fired: [] };
+  sweepExpiredMandates(); // guarded per-row transitions; never a bulk status update (Doc 4 §5)
   const db = strikeDb();
   const now = new Date().toISOString();
   const armed = db.select().from(mandates).where(eq(mandates.status, "armed")).all();

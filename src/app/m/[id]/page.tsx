@@ -14,6 +14,7 @@ type Detail = {
     condition: { type: string; price_cents: number };
     max_total_cents: number; quantity: number; currency: string;
     valid_until: string; mandate_hash: string; armed_on_prava: boolean;
+    demo_decline_available: boolean;
   };
   execution: { quote_total_cents: number | null; prava_transaction_id: string | null; store_order_id: string | null; outcome: string | null; failure_reason: string | null } | null;
   latest_price: { price_cents: number; in_stock: boolean; observed_at: string } | null;
@@ -77,6 +78,8 @@ export default function MandateDetail({ params }: { params: Promise<{ id: string
   const { id } = use(params);
   const [d, setD] = useState<Detail | null>(null);
   const [err, setErr] = useState("");
+  const [action, setAction] = useState("");
+  const [actionBusy, setActionBusy] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -100,6 +103,22 @@ export default function MandateDetail({ params }: { params: Promise<{ id: string
   const { mandate: m } = d;
   const price = d.latest_price?.price_cents ?? null;
   const belowCap = price != null && price < m.condition.price_cents;
+
+  async function revoke() {
+    setActionBusy(true);
+    const res = await fetch(`/api/mandates/${id}/revoke`, { method: "POST" });
+    const json = await res.json().catch(() => ({}));
+    setAction(json.error ? `${json.error.code}: ${json.error.message}` : "Mandate revoked. Strike will not issue another charge.");
+    setActionBusy(false);
+  }
+
+  async function demonstrateDecline() {
+    setActionBusy(true);
+    const res = await fetch(`/api/mandates/${id}/demo-decline`, { method: "POST" });
+    const json = await res.json().catch(() => ({}));
+    setAction(json.error ? `${json.error.code}: ${json.error.message}` : "Prava returned a real network refusal.");
+    setActionBusy(false);
+  }
 
   return (
     <main className="mx-auto w-full max-w-2xl px-6 py-14">
@@ -130,6 +149,29 @@ export default function MandateDetail({ params }: { params: Promise<{ id: string
         </div>
         {d.latest_price && !d.latest_price.in_stock && <div className="num pb-1 text-[12px] text-warn">out of stock</div>}
       </div>
+
+      {m.status === "failed" && (
+        <section className="mt-5 rounded-card border border-danger/40 bg-danger/5 p-4" role="alert">
+          <div className="num text-[11px] uppercase tracking-[0.18em] text-danger">Network declined</div>
+          <h2 className="mt-1 text-[15px] font-semibold text-danger">Prava refused this charge</h2>
+          <p className="mt-1 text-[13px] text-muted">{d.execution?.failure_reason ?? "The payment network refused to issue a credential outside the mandate."}</p>
+        </section>
+      )}
+
+      {(m.status === "armed" || m.status === "triggered" || m.status === "executing") && (
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button onClick={revoke} disabled={actionBusy} className="rounded border border-danger/40 px-3 py-2 text-[13px] font-medium text-danger hover:bg-danger/10 disabled:opacity-50">
+            {actionBusy ? "Working…" : "Revoke mandate"}
+          </button>
+          {m.demo_decline_available && m.status === "armed" && (
+            <button onClick={demonstrateDecline} disabled={actionBusy || !belowCap} className="rounded border border-danger/40 px-3 py-2 text-[13px] font-medium text-danger hover:bg-danger/10 disabled:opacity-50">
+              Prove network cap
+            </button>
+          )}
+          {m.demo_decline_available && m.status === "armed" && !belowCap && <span className="text-[12px] text-muted">Drop the price below the trigger to run the decline proof.</span>}
+          {action && <span className="text-[12px] text-muted">{action}</span>}
+        </div>
+      )}
 
       {/* timeline — the cascade */}
       <h2 className="mt-8 num text-[11px] uppercase tracking-[0.2em] text-muted">Audit timeline</h2>

@@ -83,6 +83,14 @@ export async function executeExecution(executionId: string, opts: { bypassCap?: 
     return fail(m, executionId, "prava_declined", charge.errorMessage ?? "charge failed", charge.transactionId); // e.g. THRESHOLD_EXCEEDED (Beat 5)
   }
 
+  // A revoke which lands after Line P but before Line C wins. The minted credential remains only
+  // in this stack frame and is never sent to the merchant; report the unused charge as DECLINED.
+  const current = db.select({ status: mandates.status }).from(mandates).where(eq(mandates.id, m.id)).get();
+  if (current?.status === "revoked") {
+    await reportSafe(m.pravaMandateId, charge.transactionId, "DECLINED");
+    return { ok: false, outcome: "revoked", reason: "user_revoked" };
+  }
+
   // ==== LINE C — checkout with the single-use credentials (memory only, never persisted) ====
   const creds = charge.credentials;
   const checkoutRes = await fetch(`${APP_ORIGIN}/store/api/checkout`, {
