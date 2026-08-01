@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS mandates (
   signature BLOB,
   authenticator_data BLOB,
   client_data_json BLOB,
+  prava_mandate_id TEXT,
   signed_at TEXT,
   resolved_at TEXT,
   created_at TEXT NOT NULL
@@ -141,6 +142,12 @@ const g = globalThis as unknown as {
 export function strikeDb() {
   if (!g.__strikeDb) {
     g.__strikeSqlite = open("strike.db", STRIKE_DDL);
+    // idempotent migration for DBs created before M5 (ADD COLUMN errors if it exists — ignore)
+    try {
+      g.__strikeSqlite.exec("ALTER TABLE mandates ADD COLUMN prava_mandate_id TEXT");
+    } catch {
+      /* column already present */
+    }
     g.__strikeDb = drizzle(g.__strikeSqlite, { schema: strikeSchema });
   }
   return g.__strikeDb;

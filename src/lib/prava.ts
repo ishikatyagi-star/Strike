@@ -216,3 +216,17 @@ export async function chargeMandate(
     body,
   );
 }
+
+// Close the loop after checkout (Doc 3 §4 step 6). Fire-and-retry — a failure here never blocks the
+// order (Doc 3 §6), so the executor logs + flags rather than failing a completed purchase.
+export async function reportMandateCharge(input: {
+  mandateId: string;
+  transactionId: string;
+  status: "APPROVED" | "DECLINED";
+}) {
+  return call<{ ok?: boolean; status?: string }>(
+    "POST",
+    `/v1/mandates/${input.mandateId}/report`,
+    { transaction_id: input.transactionId, status: input.status },
+  );
+}

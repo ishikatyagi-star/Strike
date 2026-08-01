@@ -55,6 +55,7 @@ export async function POST(req: Request) {
     signature: null,
     authenticatorData: null,
     clientDataJson: null,
+    pravaMandateId: null,
     signedAt: null,
     resolvedAt: null,
     createdAt: now,

@@ -85,9 +85,10 @@ export const mandates = sqliteTable(
     nonce: text("nonce").notNull(),
     nonceConsumedAt: text("nonce_consumed_at"),
     status: text("status").$type<MandateStatus>().notNull(),
-    signature: blob("signature"),
-    authenticatorData: blob("authenticator_data"),
-    clientDataJson: blob("client_data_json"),
+    signature: blob("signature").$type<Buffer>(),
+    authenticatorData: blob("authenticator_data").$type<Buffer>(),
+    clientDataJson: blob("client_data_json").$type<Buffer>(),
+    pravaMandateId: text("prava_mandate_id"), // backing Prava one-time mandate, set at arm (Doc 2 §7)
     signedAt: text("signed_at"),
     resolvedAt: text("resolved_at"),
     createdAt: text("created_at").notNull(),

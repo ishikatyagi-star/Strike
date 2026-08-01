@@ -7,6 +7,7 @@ import { wavelengthAdapter } from "./adapter";
 import { recordSnapshot } from "./snapshots";
 import { evaluateAndTrigger, type TriggerOutcome } from "./trigger";
 import { acquireOrRenew } from "./lease";
+import { executeExecution } from "@/lib/executor/execute";
 
 const TICK_MS = 3000;
 
@@ -27,8 +28,11 @@ export async function runTickOnce(): Promise<TickResult> {
     const obs = await wavelengthAdapter.observe(m.itemSku);
     if (!obs) continue;
     const snap = recordSnapshot(m.merchantId, m.itemSku, obs);
-    const outcome = evaluateAndTrigger({ id: m.id, conditionJson: m.conditionJson, quantity: m.quantity }, snap);
+    const { outcome, executionId } = evaluateAndTrigger({ id: m.id, conditionJson: m.conditionJson, quantity: m.quantity }, snap);
     fired.push({ mandate: m.id, price_cents: obs.price_cents, outcome });
+    if (outcome === "triggered" && executionId) {
+      void executeExecution(executionId).catch(() => {}); // hand off to the spend path (Doc 3 §4)
+    }
   }
   return { leader: true, armed: armed.length, fired };
 }
