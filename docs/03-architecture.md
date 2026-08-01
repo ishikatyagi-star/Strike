@@ -65,12 +65,12 @@ Trust boundary: **only `X` (executor) may call Prava**, and only after re-runnin
 
 1. Trigger CAS wins → `executions` row created; **`execution_id` is the idempotency key for everything downstream.**
 2. Executor runs the spend gate (re-verify signature, status, expiry, revocation, live re-quote ≤ cap — Doc 2 §3.4). Abort ⇒ re-arm per failure matrix.
-3. **Line P:** `POST /v1/sessions` to Prava with the exact quote total, merchant pinned, `execution_id` as idempotency key/metadata. Retries (×2, backoff, 5xx only) resend the same key — Prava-side dedupe, no double session.
-4. Poll payment result → single-use token + dynamic CVV. Credentials held in memory only — never written to DB or logs.
+3. **Line P (`PRAVA_MODE=mandate`):** `POST /v1/mandates/{prava_mandate_id}/charge` with `amount` = exact quote total and `reference` = `execution_id`. **Synchronous** — the response returns the single-use `credentials` (token, `dynamicCvv`, expiry) *and* a `deduplicated` flag; there is no separate poll. Retries (×2, backoff, 5xx only) resend the same `reference` — Prava dedupes, no double charge. (`prava_mandate_id` was created + passkey-approved at arm time, Doc 2 §7.)
+4. Credentials arrive **with** the charge response (no poll step). Held in memory only — never written to DB or logs; the store checkout consumes them immediately.
 5. **Line C:** `POST /store/api/checkout` with credentials + `Idempotency-Key: execution_id`; the store dedupes on it, so a crash-retry cannot double-order.
 6. Report `APPROVED`/`DECLINED` to Prava; mark `fulfilled`/`failed`; audit each step (same-transaction rule, Doc 2 §4).
 
-**Restart recovery** (runs on boot, before the watcher starts): scan `executing` rows — no `prava_session_id` recorded ⇒ re-arm (nothing engaged); session but no checkout ⇒ resume at step 4 with the same `execution_id` (a dead session simply fails-closed per matrix); checkout submitted ⇒ reconcile against the store's order table and Prava status, then finalize. State machine + idempotency keys mean **restart at any line of the executor is safe** — Doc 1 success criterion 6, and we demo it in rehearsal by `kill -9`-ing mid-execution.
+**Restart recovery** (runs on boot, before the watcher starts): scan `executing` rows — no charge issued (no Prava `transactionId` recorded) ⇒ re-arm (nothing engaged); charge issued but no checkout ⇒ re-issue with the same `reference` (idempotent — Prava returns the original, `deduplicated:true`) and resume at Line C; checkout submitted ⇒ reconcile against the store's order table and Prava status, then finalize. State machine + idempotency keys mean **restart at any line of the executor is safe** — Doc 1 success criterion 6, and we demo it in rehearsal by `kill -9`-ing mid-execution.
 
 ## 5. Where the LLM sits — and where it cannot
 
@@ -88,25 +88,25 @@ Everything Prava lives in **one module: `src/lib/prava.ts`** — typed client, 1
 
 | Call | Used for | If it misbehaves at 2am |
 |---|---|---|
-| `POST /v1/sessions` (sk key) | Line P: pin merchant + exact amount | Retry ×2 on 5xx; 4xx ⇒ `failed(prava_declined)`. Shape drift ⇒ fix in one file. |
-| Get payment result (poll) | Mint single-use token + CVV | Poll to a 60 s budget; timeout ⇒ revoke session, `failed`, audit. |
-| Report status | Close the loop APPROVED/DECLINED | Fire-and-retry; a failure here never blocks the order (log + flag). |
-| Revoke session | Abort after Line P, decline beat fallback | Best-effort; session self-expires in minutes anyway. |
-| List cards | Setup check: saved card exists before arming is allowed | Cache at boot; if down, blocks setup only, never execution of an armed mandate. |
-| SDK `collectPAN` / hosted page | One-time card enrollment at setup (test card) | Pre-demo step; if broken, re-enroll during rehearsal, never live. |
-| Dashboard guardrails (checkout quota, spending cap, per-purchase approval **OFF**) | The headless-execution enabler + Beat 5 (§7) | This is the **day-1 spike**. Failure ⇒ Plan B compressed window (Doc 2 §7), decided by hour 6, flag `PRAVA_MODE=standard\|compressed`. |
+| `POST /v1/sessions` **+ `mandate_setup`** (sk key) | **Arm time:** create the one-time mandate — pin merchant (`scope: listed`), `amount` cap, ≤7-day expiry; returns an approval URL | 4xx surfaces at *setup*, never at execution; retry ×2 on 5xx. |
+| Poll mandate → `active` (List/Get Mandate) | **Arm time:** confirm the user's passkey approval landed before flipping to `armed` | Not-yet-active ⇒ stay `signed`, block arming — never blocks execution of an already-armed mandate. |
+| `POST /v1/mandates/{id}/charge` (sk key) | **Line P:** synchronous mint, `reference`=`execution_id`; credentials returned inline | Retry ×2 on 5xx (same `reference`). `MANDATE_NOT_ACTIVE`/`MANDATE_EXPIRED`/4xx ⇒ `failed(prava_declined)`. `THRESHOLD_EXCEEDED` = Beat 5, expected. Shape drift ⇒ fix in one file. |
+| Report charge (`/v1/mandates/{id}/report`) | Close the loop APPROVED/DECLINED | Fire-and-retry; a failure here never blocks the order (log + flag). |
+| Mandate lifecycle (pause/cancel) / revoke | Abort after Line P; revoke-mandate is the decline-beat fallback | Best-effort; the one-time mandate self-consumes/expires anyway. |
+| List cards / SDK `collectPAN` | **Setup:** enroll the sandbox test card that backs the mandate | Cache at boot; if down, blocks setup only, never execution. |
+| Guardrails — the mandate `amount` cap **is** the guardrail | Beat 5: an over-cap charge is refused with `THRESHOLD_EXCEEDED` | RESOLVED from docs (Doc 2 A2). M1 confirms with a live over-cap charge; no separate wallet cap to configure. |
 
 ## 7. Demo mode — deterministic drop, real payments
 
 - **The lever:** `POST /store/admin/price {sku, price_cents}` behind an admin cookie, with a big red button on `/store/admin`. Clicking it updates the DB price; the watcher notices on its next 3 s tick. Nothing about Strike knows the lever exists — the watcher reads the same product API any adapter would.
-- **The decline beat (Beat 5), with a real refusal:** we set a **Prava-side wallet spending cap ≈ our demo cap** during setup. On stage, a debug-only switch (`DEMO_BYPASS_GATE`, compiled out unless `DEMO=1`) skips *our* app-layer cap check and requests a $250 session — **Prava/network refuses it**, proving the last-resort layer with our own code as the attacker. Fallback if sandbox guardrails don't behave (spike will tell): revoke the session mid-execution and show Prava's live revocation error instead. Both are real refusals from Prava's side; neither fakes a payment.
+- **The decline beat (Beat 5), with a real refusal:** the mandate's own **`amount` cap is the guardrail** — nothing extra to configure. On stage, `DEMO_BYPASS_GATE` (compiled out unless `DEMO=1`) skips *our* app-layer cap check and issues a charge **above the mandate cap**; Prava refuses to mint: `status:"failed"`, `errorMessage:"THRESHOLD_EXCEEDED"` — a real card-network refusal with our own code as the attacker. Fallbacks (all real Prava errors, none faked): a listed-scope violation (`MANDATE_MERCHANT_NOT_ALLOWED`, 403), or charging a `consumed`/revoked mandate (`MANDATE_NOT_ACTIVE`, 409).
 - **Reset:** `/store/admin` also has "Reset demo" — price back to $199, demo mandates cleared, executions archived. Rehearsable end-to-end in under a minute.
 - **What is never simulated:** session creation, passkey prompts, token minting, status reporting. If Prava sandbox is down at demo time, we play the backup video (Doc 1) — we do not stub the payment.
 
 ## Assumptions
 
-- **A1:** Prava REST create-session accepts an idempotency key (MCP tool does; REST assumed same — spike verifies; if absent, our pre-flight `GET` on execution state + single poll loop covers dedupe).
-- **A2:** Sandbox wallet guardrails (spending cap) can produce the Beat 5 refusal; fallback is the revoke-session variant. Spike verifies both.
+- **A1:** RESOLVED — the money-moving call is `POST /v1/mandates/{id}/charge`, which takes a `reference` idempotency key (≤255 chars) and returns a `deduplicated` flag; `execution_id` maps to `reference` directly. (Plain `POST /v1/sessions` has no idempotency header, but the money path never uses a bare session — only `mandate_setup` at arm time and `charge` at execution.)
+- **A2:** RESOLVED (from docs) — Beat 5's refusal is the **mandate `amount` cap**: an over-cap charge returns `THRESHOLD_EXCEEDED`. No separate wallet cap needed. Fallbacks: `MANDATE_MERCHANT_NOT_ALLOWED` (listed-scope) or `MANDATE_NOT_ACTIVE` (consumed/revoked). To confirm with fixtures in M1.
 - **A3:** OpenAI key is ours (personal); if the venue provides credits/endpoint we swap `OPENAI_BASE_URL`. A canned-draft fixture (`LLM_MODE=fixture`) exists so the demo survives an OpenAI outage.
 - **A4:** Venue internet or phone hotspot suffices for two HTTPS APIs. Rehearsal includes one full run on the hotspot.
 - **A5:** Single demo user seeded at boot; no auth beyond a session cookie + the registered passkey.

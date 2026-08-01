@@ -21,7 +21,8 @@ Two zones: **SIGNED** fields are immutable after signing and covered by the pass
 | `max_total_cents` | int | SIGNED | Ceiling on the **total charge** (price × qty + any fees), not the sticker price. |
 | `quantity` | int (=1 for demo) | SIGNED | |
 | `currency` | ISO 4217 (`USD`) | SIGNED | |
-| `valid_from / valid_until` | UTC ISO-8601 | SIGNED | Validity window. `valid_until` ≤ 30 days out (v1 cap). |
+| `valid_from / valid_until` | UTC ISO-8601 | SIGNED | Validity window. `valid_until` ≤ **7 days** out under `PRAVA_MODE=mandate` — must be ≤ the backing Prava one-time-mandate horizon (§7); the 30-day v1 policy cap is the outer ceiling otherwise. |
+| `prava_mandate_id` | string | RUNTIME | The backing Prava one-time mandate, set at arm time once it reports `active` (§7). Not signed. |
 | `mode` | enum `single_use` | SIGNED | `recurring` reserved in the enum, rejected by validation in v1. |
 | `nonce` | 128-bit base64url | SIGNED | Server-issued at draft creation, single-use, 15-min TTL. |
 | `status` | enum (§4) | RUNTIME | |
@@ -108,7 +109,7 @@ Two bright lines decide everything: **Line P** = the moment we create the Prava 
 | Merchant tries to charge more than quoted | After P | Impossible to succeed: Prava token is minted for the exact quoted total; the network declines any higher charge. We observe the decline, report `DECLINED` to Prava, mark **failed** (`reason=merchant_overcharge`), never auto-retry, flag for user. This row is Beat 5's cousin. |
 | Partial capture (merchant captures < authorized) | After C | Order stands; mark **fulfilled** with `captured_amount` recorded; audit logs the delta. (Demo store: capture == auth, so this is spec-only.) |
 | Duplicate trigger (two watcher cycles race) | At 5 | CAS on `status='armed' → 'triggered'` — exactly one wins; loser is a silent no-op. Execution insert has a UNIQUE(mandate_id) constraint as the second lock. One `CONDITION_TRIGGERED` event ever. |
-| Prava session/token call fails | At P | 5xx/timeout: retry ×2, exponential backoff, same idempotency key. Still failing or a hard 4xx/decline ⇒ **failed** (`reason=prava_declined` + code), notify user. No re-arm — payment-side failures need a human. |
+| Prava **mandate charge** fails | At P | 5xx/timeout: retry ×2, exponential backoff, same `reference` (= `execution_id`). Hard 4xx (`MANDATE_NOT_ACTIVE` 409, `MANDATE_EXPIRED` 400, `THRESHOLD_EXCEEDED` failed-status) ⇒ **failed** (`reason=prava_declined` + code), notify user. No re-arm — payment-side failures need a human. |
 | Prava card (network) declines checkout | After P | Report `DECLINED` to Prava, mark **failed**, audit the network response. No auto-retry. |
 | Mandate expires mid-execution | Before P: abort → **expired**. | After P: run to completion — the amount was pinned ≤ cap while valid; audit notes `expired_during_execution=true`. |
 | User revokes while executing | Before C: honor it — abandon the token unused, report status to Prava, mark **revoked**. | After C: transaction completes → **fulfilled**; audit `revoke_late=true`; UI tells the user the order preceded the revoke by N ms — provable from the log. |
@@ -122,15 +123,27 @@ Two bright lines decide everything: **Line P** = the moment we create the Prava 
 | Signed authorization exists & verifies | ✅ §3.4 gate | — |
 | Single fire of the mandate | ✅ state machine CAS | ✅ token is single-use |
 | Merchant binding | ✅ mandate.merchant checked | ✅ token locked to merchant pinned in session |
-| Amount ceiling | ✅ quote ≤ max_total_cents | ✅ token minted for the exact session amount; higher charge = network decline |
+| Amount ceiling | ✅ quote ≤ max_total_cents (app gate) | ✅ Prava **mandate cap** — a charge over the cap is refused *at mint* (`THRESHOLD_EXCEEDED`); the token that *is* minted is locked to the charged amount. Card-network enforced (Beat 5). |
 | Time bound | ✅ valid_until | ✅ session/token expires in minutes |
 | Card data exposure | — (we never see a PAN) | ✅ zero PCI scope by construction |
 
 **Why Prava is the enforcement layer of last resort:** every row in the left column is code we wrote this weekend and could have gotten wrong. The right column is enforced by the card network on infrastructure we cannot touch. The threat model to state on stage: *assume Strike's application code is fully compromised* — the worst possible outcome is still only the pre-quoted amount, at the signed merchant, once, within a minutes-long window. Our mandate narrows intent; Prava makes the narrowing physical.
 
-## 7. Plan B — compressed window (only if the day-1 spike fails)
+## 7. Prava execution model — RESOLVED (`PRAVA_MODE=mandate`)
 
-If sandbox proves saved-card + approval-off cannot mint a token headlessly: the T0 passkey ceremony creates **both** our mandate signature and the Prava payment session (user completes Prava's approval in the same sitting), and the demo's trigger fires within Prava's 15-minute session window. State machine, audit log, decline beat, and all verification gates are unchanged — only `valid_until` compresses and Line P moves to T0. We do not advertise the horizon on stage; we do not fake any payment. Decision point: end of day-1 spike (Doc 6).
+> Decided 2026-07-31 from Prava's live docs (docs.prava.space). **Supersedes** the old "compressed window" Plan B. Shapes below are from the published API, **to be confirmed against sandbox with captured fixtures in M1** (Doc 6) — that is the spike's job, but the *design decision* is made.
+
+The day-1 assumption (A7: saved-card + per-purchase-approval OFF ⇒ headless mint) is **false**. Prava's plain session flow (`POST /v1/sessions` → poll `GET /v1/sessions/{id}/payment-result`) requires a passkey approval on Prava's surface for *every* payment, and there is **no toggle** to disable it (Guardrails: "every spend needs explicit approval," "passkey required for every intent mutation"). The headless path is Prava's **one-time Mandate** primitive — which happens to be a near-exact substrate for ours.
+
+**At arm time (T0 — one human-in-the-loop step, in the same sitting as the Strike passkey ceremony):** the server creates a Prava one-time mandate via a `mandate_setup` session (`POST /v1/sessions` with a `mandate_setup` block: `frequency: one_time`, `scope: listed` pinned to Wavelength, `amount` = `max_total_cents`, validity ≤ 7 days). Prava returns an approval URL; the user approves **once** with their Prava passkey. The server polls the mandate to `active` and stores `prava_mandate_id` on the mandate row. There is no card on file and no standing trust — the mandate *is* the merchant-scoped, network-enforced authorization.
+
+**On trigger (headless, no human present):** the spend gate (§3.4) runs unchanged, then **Line P** is a single **synchronous** `POST /v1/mandates/{prava_mandate_id}/charge` with `amount` = live quote total and `reference` = `execution_id` (idempotency — the response carries a `deduplicated` flag). On success the *same response* returns single-use `credentials` (token, `dynamicCvv`, expiry) — **no separate poll step**. Those flow straight to Line C (`/store/api/checkout`), held in memory only, then we report APPROVED/DECLINED to Prava. The one-time mandate transitions to `consumed` after settlement — a fourth replay lock (§3.5), now network-native.
+
+**Unchanged:** the state machine, the audit log, both single-fire locks, every verification gate, and the decline beat (Beat 5) — which gets *cleaner*: an over-cap charge is refused at mint with `status:"failed"`, `errorMessage:"THRESHOLD_EXCEEDED"`, a real card-network refusal requiring no wallet-cap setup (Doc 3 §7).
+
+**Why this beats the old Plan B:** one approval buys up to **7 days** of headless execution — no 15-minute window, no compressed horizon, no faked payment — with the amount ceiling enforced at the card-network level through the tokenized credential. The "assume Strike's app code is fully compromised" threat model (§6) gets *stronger*, not weaker.
+
+**Degraded fallback (`PRAVA_MODE=session_live`) — only if mandate-charge misbehaves in the M1 sandbox spike:** fall back to the plain session flow with a live passkey tap during the demo (Line P moves to demo time). This *loses* the "no human input after signing" property for the payment beat and is a genuine last resort; the mandate path is the plan of record. Confirmed either way by M1 fixtures (Doc 6).
 
 ## Assumptions
 
@@ -140,4 +153,4 @@ If sandbox proves saved-card + approval-off cannot mint a token headlessly: the 
 - **A4:** Nonce/draft TTL 15 min; `valid_until` capped at 30 days (v1 policy, not a protocol limit).
 - **A5:** Re-arm (row 8) is unlimited within the validity window; a mandate can abort and re-arm many times but trigger-and-pay only once.
 - **A6:** Revocation requires only an authenticated session, not a passkey (approved: hard to arm, easy to disarm).
-- **A7:** Prava saved-card + per-purchase-approval OFF permits headless token minting in sandbox — **unverified until the day-1 spike**; Plan B (§7) is the pre-agreed fallback.
+- **A7:** RESOLVED (2026-07-31, from live docs). Headless minting is **not** possible via saved-card + approval-off — the session flow requires a passkey per payment, with no toggle. It **is** possible via Prava's one-time **Mandate**: approve once at arm time, charge headlessly on trigger via `POST /v1/mandates/{id}/charge`. Adopted as `PRAVA_MODE=mandate` (§7); shapes to be confirmed with sandbox fixtures in M1. The old compressed-window Plan B is retired — the mandate horizon (≤ 7 days) already covers the demo. Degraded fallback is now `PRAVA_MODE=session_live` (§7).

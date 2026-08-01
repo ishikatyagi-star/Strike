@@ -27,11 +27,12 @@ Drizzle-defined, WAL mode. Types shown as SQLite storage / TS type. All timestam
 | `nonce` | text NOT NULL UNIQUE · `nonce_consumed_at` nullable |
 | `status` | text CHECK IN ('draft','signed','armed','triggered','executing','fulfilled','failed','expired','revoked','discarded') |
 | `signature`,`authenticator_data`,`client_data_json` | blob, nullable until signed |
+| `prava_mandate_id` | text nullable — backing Prava one-time mandate, set at arm time once it reports `active` (Doc 2 §7). Added M1. |
 | `signed_at`,`resolved_at`,`created_at` | text |
 
 Indices: `(status)` · `(status, valid_until)` (watcher + sweeper) · `(user_id, created_at DESC)` (list screen).
 
-**executions** — `id` uuid PK (**the end-to-end idempotency key**) · `mandate_id` FK **UNIQUE** (single-fire lock #2) · `trigger_snapshot_id` FK→price_snapshots · `quote_total_cents` int · `prava_session_id` text nullable (Line P marker) · `checkout_submitted_at` nullable (Line C marker) · `store_order_id` nullable · `outcome` CHECK IN ('fulfilled','aborted_rearmed','failed','revoked') nullable · `failure_reason` text nullable · `created_at`,`updated_at`.
+**executions** — `id` uuid PK (**the end-to-end idempotency key**) · `mandate_id` FK **UNIQUE** (single-fire lock #2) · `trigger_snapshot_id` FK→price_snapshots · `quote_total_cents` int · `prava_txn_id` text nullable (Line P marker — the mandate-charge `transactionId`; was `prava_session_id`, renamed M1 for `PRAVA_MODE=mandate`) · `checkout_submitted_at` nullable (Line C marker) · `store_order_id` nullable · `outcome` CHECK IN ('fulfilled','aborted_rearmed','failed','revoked') nullable · `failure_reason` text nullable · `created_at`,`updated_at`.
 
 **audit_events** — `seq` INTEGER PK AUTOINCREMENT (global order) · `mandate_id` FK nullable · `execution_id` nullable · `event_type` text CHECK IN (the 12 Doc 2 events + `PRAVA_CALL`,`RECOVERY_ACTION`) · `actor` CHECK IN ('user','llm','watcher','executor','system','prava') · `payload_json` text NOT NULL · `created_at`. **Append-only, enforced**: `CREATE TRIGGER ... BEFORE UPDATE/DELETE ... SELECT RAISE(ABORT,'audit_events is append-only')`. Index `(mandate_id, seq)`.
 Reconstructibility rule: every `status` change and every Prava call writes its event **in the same transaction** (Doc 2 §4); therefore `SELECT * FROM audit_events WHERE mandate_id=? ORDER BY seq` replays the entire life of a mandate, including everything the money path did.

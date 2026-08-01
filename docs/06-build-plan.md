@@ -32,7 +32,7 @@ Rule of engagement: milestone acceptance = **Ishika runs the demo step herself**
 | M | Deliverable → demoable as | Acceptance (Ishika-run) | Budget | Latest cut/decision |
 |---|---|---|---|---|
 | **M0 Pre-flight** | Repo scaffold (Next.js, Drizzle, tokens, CLAUDE.md), Prava sandbox + OpenAI keys, test card ready | `pnpm dev` boots; S0 checklist screen renders | 2h (pre-clock) | — |
-| **M1 Prava spike** | **The gate.** Sandbox: session → collectPAN (test card) → saved-card **headless** re-mint; guardrail-cap refusal probed; REST idempotency-key confirmed | Headless token minted with no human present, OR Plan B declared. **`PRAVA_MODE` decided by H4** — Docs 2 A7 / 3 A1–A2 resolved in writing | 3h | Decision H4, not cuttable |
+| **M1 Prava spike** | **The gate.** Sandbox: `mandate_setup` session → passkey approve → mandate `active` → `POST /mandates/{id}/charge` (headless) → capture fixtures; `THRESHOLD_EXCEEDED` over-cap refusal probed; `reference` idempotency confirmed | Headless charge mints a token with no human present, OR `session_live` fallback declared. **`PRAVA_MODE=mandate` decided on paper 2026-07-31** (Docs 2 A7 / 3 A1–A2); M1 confirms with live fixtures | 3h | Not cuttable |
 | **M2 Wavelength** | Store + quote/checkout API (idempotent) + admin lever + reset | Buy with a dummy card via curl; lever drops price; duplicate `Idempotency-Key` returns same order | 2h | not cuttable |
 | **M3 Mandate core** | Schema, draft (form-first), JCS hash, **passkey sign ceremony**, ScopeCard, armed state | Ishika signs with Touch ID; tampered draft → `HASH_MISMATCH`; replayed assertion → `NONCE_CONSUMED` | 4h | not cuttable |
 | **M4 Watcher + trigger** | 3 s poll, snapshots, CAS trigger, audit timeline live on S3 | Lever → TRIGGERED row cascades on screen ≤ 5 s; two forced concurrent ticks → exactly one trigger | 3h | not cuttable |
@@ -59,7 +59,7 @@ At H40 the code is done, bugs or not. Allowed after: demo-blocking fixes only (d
 
 | # | Risk | Early warning | Pre-decided fallback |
 |---|---|---|---|
-| 1 | Headless saved-card mint not possible in sandbox | M1 spike, by H4 | **Plan B compressed window** (Doc 2 §7), `PRAVA_MODE=compressed`; demo script beats unchanged |
+| 1 | Headless charge via one-time Mandate fails in sandbox | M1 spike (first live `charge`) | **`PRAVA_MODE=session_live`** (Doc 2 §7) — plain session + one live passkey tap during the demo; all other beats unchanged |
 | 2 | WebAuthn friction (origin/rp.id quirks, Safari oddities) | M3's first sign attempt fails >30 min | Chrome-only, localhost-only, passkey pre-registered in S0 before the 3 minutes; ceremony itself is never cut |
 | 3 | Prava sandbox flaky/rate-limited at hour 30 | Any 5xx during M1/M5 | Retry logic already spec'd (Doc 3 §6); record the backup video **the first time E2E goes green** (end of M5, not H44) |
 | 4 | Solo scope creep / fatigue judgment | Any milestone slips >2h; it's past 2am and we're adding, not fixing | The cut list above is pre-agreed — execute it without re-debating; sleep blocks are not negotiable |
