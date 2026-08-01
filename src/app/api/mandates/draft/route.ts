@@ -7,6 +7,7 @@ import { resolveItem } from "@/lib/mandate/registry";
 import { buildSignedZone, hashOf } from "@/lib/mandate/signed-zone";
 import { ensureDemoUser, firstCredential, authOptionsFor } from "@/lib/webauthn/ceremony";
 import { appendEvent } from "@/lib/audit";
+import { DraftingError, draftFromUtterance } from "@/lib/llm/drafter";
 
 function err(code: string, message: string, status: number) {
   return NextResponse.json({ error: { code, message } }, { status });
@@ -15,8 +16,10 @@ function err(code: string, message: string, status: number) {
 export async function POST(req: Request) {
   let input;
   try {
-    input = DraftInput.parse(await req.json());
-  } catch {
+    const body = await req.json();
+    input = typeof body?.utterance === "string" ? await draftFromUtterance(body.utterance) : DraftInput.parse(body);
+  } catch (e) {
+    if (e instanceof DraftingError) return err("PARSE_FAILED", e.message, 422);
     return err("VALIDATION_FAILED", "invalid draft fields", 422);
   }
   if (validateDraftSemantics(input)) return err("VALIDATION_FAILED", "draft outside allowed bounds", 422);

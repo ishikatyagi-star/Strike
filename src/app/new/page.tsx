@@ -24,6 +24,7 @@ export default function NewMandate() {
   const [cap, setCap] = useState(180);
   const [qty, setQty] = useState(1);
   const [days, setDays] = useState(3);
+  const [utterance, setUtterance] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [phase, setPhase] = useState<Phase>("form");
   const [err, setErr] = useState("");
@@ -32,7 +33,7 @@ export default function NewMandate() {
   async function makeDraft() {
     setPhase("drafting");
     setErr("");
-    const body = {
+    const body = utterance.trim() ? { utterance: utterance.trim() } : {
       merchant_id: "wavelength",
       item_sku: "airpods-pro",
       condition: { type: "price_below", price_cents: Math.round(trigger * 100) },
@@ -107,11 +108,15 @@ export default function NewMandate() {
             <NumField label="Quantity" value={qty} onChange={setQty} min={1} max={10} />
             <NumField label="Valid for (days)" value={days} onChange={setDays} min={1} max={7} />
           </div>
+          <label className="mt-4 block">
+            <span className="text-[12px] text-muted">Or describe it in your own words</span>
+            <input value={utterance} onChange={(e) => setUtterance(e.target.value)} placeholder="Buy AirPods under $180 within 3 days" className="mt-1 w-full rounded border border-line bg-bg px-3 py-2 text-[14px] outline-none focus:border-strike" />
+          </label>
           <div className="mt-3 text-[13px] text-muted">
             AirPods Pro · Wavelength — buy <b className="text-ink">1</b> if the price drops under <b className="text-strike">{usd(Math.round(trigger * 100))}</b>, spending at most <b className="text-ink">{usd(Math.round(cap * 100))}</b>, within {days} days.
           </div>
           <button onClick={makeDraft} disabled={phase === "drafting"} className="mt-5 w-full rounded bg-strike/10 py-3 text-[15px] font-semibold text-strike ring-1 ring-inset ring-strike/30 hover:bg-strike/15 disabled:opacity-50">
-            {phase === "drafting" ? "Preparing…" : "Review scope"}
+            {phase === "drafting" ? "Parsing…" : "Review scope"}
           </button>
           {phase === "error" && <p className="mt-3 text-[13px] text-danger">{err}</p>}
         </div>

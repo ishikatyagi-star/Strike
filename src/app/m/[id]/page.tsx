@@ -19,6 +19,7 @@ type Detail = {
   execution: { quote_total_cents: number | null; prava_transaction_id: string | null; store_order_id: string | null; outcome: string | null; failure_reason: string | null } | null;
   latest_price: { price_cents: number; in_stock: boolean; observed_at: string } | null;
   events: Ev[];
+  narration?: string;
 };
 
 const MONEY = new Set(["armed", "triggered", "executing", "fulfilled"]);
@@ -158,6 +159,8 @@ export default function MandateDetail({ params }: { params: Promise<{ id: string
         </section>
       )}
 
+      {d.narration && <p className="mt-4 text-[14px] text-muted">{d.narration}</p>}
+
       {(m.status === "armed" || m.status === "triggered" || m.status === "executing") && (
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <button onClick={revoke} disabled={actionBusy} className="rounded border border-danger/40 px-3 py-2 text-[13px] font-medium text-danger hover:bg-danger/10 disabled:opacity-50">
@@ -198,6 +201,9 @@ export default function MandateDetail({ params }: { params: Promise<{ id: string
 
       {d.execution?.store_order_id && (
         <p className="num mt-6 text-[12px] text-muted">Wavelength order {d.execution.store_order_id}</p>
+      )}
+      {m.status === "fulfilled" && (
+        <a href={`/m/${id}/receipt`} className="mt-5 inline-block text-[13px] text-link hover:underline">View verifiable receipt →</a>
       )}
       <div className="num mt-6 break-all border-t border-line pt-4 text-[10px] text-muted/70">hash {m.mandate_hash}</div>
     </main>

@@ -5,6 +5,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { strikeDb } from "@/db/client";
 import { mandates, executions, auditEvents, priceSnapshots } from "@/db/strike-schema";
 import { hashOf } from "@/lib/mandate/signed-zone";
+import { narrate } from "@/lib/llm/narrator";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,6 +21,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .where(and(eq(priceSnapshots.merchantId, m.merchantId), eq(priceSnapshots.sku, m.itemSku)))
     .orderBy(desc(priceSnapshots.observedAt), desc(priceSnapshots.id))
     .get();
+
+  const narration = await narrate({
+    status: m.status,
+    item: m.itemDisplayName,
+    latestPrice: snap?.priceCents,
+    triggerCents: (JSON.parse(m.conditionJson) as { price_cents: number }).price_cents,
+    amountCents: ex?.quoteTotalCents,
+  });
 
   return NextResponse.json({
     mandate: {
@@ -51,5 +60,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       : null,
     latest_price: snap ? { price_cents: snap.priceCents, in_stock: Boolean(snap.inStock), observed_at: snap.observedAt } : null,
     events: events.map((e) => ({ seq: e.seq, event_type: e.eventType, actor: e.actor, payload: JSON.parse(e.payloadJson), created_at: e.createdAt })),
+    narration,
   });
 }
