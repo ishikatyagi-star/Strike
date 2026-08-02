@@ -17,7 +17,6 @@ Conditional purchase mandates on Prava rails, built for the Agentic Commerce hac
 | [docs/03-architecture.md](docs/03-architecture.md) | Stack, components, watcher, idempotency, LLM boundary, Prava surface, demo mode |
 | [docs/04-data-and-api.md](docs/04-data-and-api.md) | Both schemas, audit-log rules, full API contract, verifiable receipt |
 | [docs/05-ui.md](docs/05-ui.md) | "The Instrument" design system, 6 screens, tokens |
-| [docs/06-build-plan.md](docs/06-build-plan.md) | Milestones M0–M8, cut list, hour-40 freeze, risk register |
 
 ## Never — no exceptions, no demo shortcuts
 

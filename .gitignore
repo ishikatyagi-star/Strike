@@ -44,3 +44,6 @@ next-env.d.ts
 data/
 .env.local
 fixtures/prava/
+
+# internal build plan — not published
+docs/06-build-plan.md

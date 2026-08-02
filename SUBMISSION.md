@@ -192,8 +192,8 @@ Strike qualifies for four tracks; we're claiming all four.
 Per the rules, we disclose exactly what predates the hackathon clock:
 
 - **Pre-clock (planning/scaffold):** the M0 project scaffold and the entire
-  `/docs` set (Docs 1–6: product, mandate spec, architecture, data/API, UI,
-  build plan). These are design and specification artifacts written before the
+  `/docs` set (Docs 1–5: product, mandate spec, architecture, data/API, UI).
+  These are design and specification artifacts written before the
   clock started. **They are tagged `pre-clock` in git** for a clean audit trail.
 - **Built during the hackathon (Aug 1–2 window):** everything that makes it
   work — M1 through M8 plus the demo cockpit. The Prava integration

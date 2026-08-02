@@ -10,7 +10,7 @@
 face — product, problem, Prava integration, transaction evidence, tracks,
 disclosure, and roadmap. The formal Devfolio write-up lives in
 [`SUBMISSION.md`](SUBMISSION.md); the product contract and demo script are the
-single source of truth in [`docs/`](docs/) (Docs 1–6).
+single source of truth in [`docs/`](docs/) (Docs 1–5).
 
 - **Repository:** https://github.com/ishikatyagi-star/Strike
 - **Run it:** `npm install && npm run dev` → `http://localhost:3000/demo`
@@ -267,8 +267,8 @@ end-to-end. **To verify integrations:** trace the transaction IDs above through
 Per the rules, we disclose exactly what predates the hackathon clock:
 
 - **Pre-clock (planning/scaffold), tagged `pre-clock` in git:** the M0 project
-  scaffold and the entire [`docs/`](docs/) set (Docs 1–6 — product, mandate spec,
-  architecture, data/API, UI, build plan). Design and specification artifacts
+  scaffold and the entire [`docs/`](docs/) set (Docs 1–5 — product, mandate spec,
+  architecture, data/API, UI). Design and specification artifacts
   only.
 - **Built during the hackathon (Aug 1–2):** everything that makes it work — M1–M8
   plus the `/demo` cockpit. The Prava integration (`src/lib/prava.ts`), spend gate
@@ -366,6 +366,6 @@ src/lib/watcher/    poll loop, lease, trigger CAS single-fire
 src/lib/llm/        NL drafter + template narrator
 src/lib/webauthn/   passkey ceremony, JCS canonicalization, hashing
 src/db/             drizzle schemas — strike.db + store.db
-docs/               the product contract (Docs 1–6) — single source of truth
+docs/               the product contract (Docs 1–5) — single source of truth
 SUBMISSION.md       the formal Devfolio write-up
 ```
