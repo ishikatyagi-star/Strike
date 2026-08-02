@@ -24,8 +24,8 @@ ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
 
-# SQLite files live in /app/data (created at runtime via mkdirSync). Mount a persistent
-# volume there in your host's dashboard (Railway Volumes / Fly [mounts]) so they survive
-# redeploys. Railway rejects a Dockerfile VOLUME instruction, so it is intentionally omitted.
+# SQLite files live in /app/data (created at runtime via mkdirSync). Attach a persistent
+# disk there in your host's dashboard (Railway Volumes / Fly mounts) so they survive
+# redeploys. No Dockerfile mount directive here on purpose (Railway rejects it).
 
 CMD ["npm", "run", "start"]
