@@ -272,7 +272,7 @@ integrations shipped in this hackathon build.)*
 
 Move from sandbox to production Prava: real cards, real settlement, real
 fulfillment, mandate reporting, and refund/dispute handling wired into the
-lifecycle (currently out of scope for the 48h build).
+lifecycle — the next step on the production roadmap.
 
 ### 4. Richer trigger grammar
 
@@ -365,8 +365,8 @@ hosted surface, never in this repo, DB, or logs.
 - **OpenAI free-tier daily quota** throttled live drafting during the build; we
   designed the drafter to **fall back to a deterministic local parser** on any
   error, so the creation flow never hard-fails regardless of quota.
-- **Real-merchant checkout is out of scope for 48h** — we were honest and built
-  Wavelength as a deterministic stage merchant rather than faking an Amazon
+- **Real-merchant checkout is a production-roadmap item** — we were honest and
+  built Wavelength as a deterministic stage merchant rather than faking an Amazon
   integration, and labeled non-checkout products as "catalog context only."
 
 ### What we learned

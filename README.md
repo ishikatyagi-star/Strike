@@ -94,10 +94,11 @@ conditionally, and only within what they signed?**"*
   our **Wavelength** store — with **AirPods Pro** as the verified-checkout
   adapter, price-drop as the live trigger. Natural-language mandate drafting is
   wired via OpenAI structured outputs with a deterministic local fallback.
-- **Deliberately out of scope for 48h:** real-merchant checkout (roadmap),
-  recurring mandates, multiple live trigger types, discovery/search, real money.
-  Wavelength's four other products are honestly labeled "catalog context only —
-  no checkout claim." We name our own simulated surfaces rather than fake them.
+- **On the production roadmap (next):** real-merchant checkout, recurring
+  mandates, multiple live trigger types, discovery/search, and real settlement —
+  the core is built to extend to all of them. Today Wavelength's four other
+  products are honestly labeled "catalog context only — no checkout claim." We
+  name our own simulated surfaces rather than fake them.
 
 ---
 
@@ -301,8 +302,8 @@ during the hackathon.
   one-time Mandate (approved once at arm time) is what makes autonomy real.
 - **OpenAI free-tier daily quota** throttled live drafting — the drafter falls back
   to a deterministic local parser, so creation never hard-fails.
-- **Real-merchant checkout is out of scope for 48h** — we built Wavelength as an
-  honest, deterministic stage merchant rather than faking an integration.
+- **Real-merchant checkout is a production-roadmap item** — we built Wavelength as
+  an honest, deterministic stage merchant rather than faking an integration.
 
 **What we learned**
 - The defensible primitive isn't *finding* the deal — it's a **signed, bounded
