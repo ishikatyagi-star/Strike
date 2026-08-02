@@ -49,6 +49,37 @@ Wavelength catalog seeds lazily (`ensureSeed()`), so you don't need to ship any 
    `WEBAUTHN_RP_ID` is the bare host (no scheme, no trailing slash);
    `WEBAUTHN_ORIGIN` is the full `https://` origin.
 
+## Alternative: Fly.io (if Railway isn't available)
+
+Same [`Dockerfile`](Dockerfile); the repo ships a [`fly.toml`](fly.toml) with an
+always-on machine (`min_machines_running = 1`, so the watcher never stops) and a
+volume mounted at `/app/data`. Needs a card, but a single `shared-cpu-1x` + 1 GB
+volume over the judging window costs cents.
+
+```bash
+fly launch --no-deploy            # or `fly launch --copy-config` to reuse fly.toml
+fly volumes create strike_data --size 1 --region iad   # match primary_region
+
+# secrets (never in fly.toml):
+fly secrets set \
+  PRAVA_SECRET_KEY=sk_test_... \
+  PRAVA_PUBLISHABLE_KEY=pk_test_... \
+  OPENAI_API_KEY=sk-... \
+  STORE_ADMIN_KEY=<pick-a-non-default-secret>
+
+fly deploy
+fly status                        # note the *.fly.dev hostname
+
+# point WebAuthn at the real domain, then redeploy:
+fly secrets set \
+  WEBAUTHN_RP_ID=strike.fly.dev \
+  WEBAUTHN_ORIGIN=https://strike.fly.dev
+fly deploy
+```
+
+`WEBAUTHN_RP_ID` is the bare host; `WEBAUTHN_ORIGIN` is the full `https://` origin.
+Everything below (making it try-able) applies to Fly the same way.
+
 ## Make it try-able for judges (no access request needed)
 
 Arming is the only step that needs **your** Prava passkey. Do it once on the hosted

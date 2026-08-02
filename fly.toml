@@ -1,0 +1,35 @@
+# Strike on Fly.io — always-on VM (3s watcher) + persistent volume (SQLite).
+# Uses the repo Dockerfile. Rename `app` if the name is taken.
+app = "strike"
+primary_region = "iad"   # pick one near the judges; sea/lax/ord/lhr/sin all fine
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  PRAVA_BASE_URL = "https://sandbox.api.prava.space"
+  PRAVA_MODE = "standard"
+  OPENAI_MODEL = "gpt-4o-mini"
+  LLM_MODE = "live"
+  WATCHER = "1"
+  DEMO = "0"
+  # WEBAUTHN_RP_ID / WEBAUTHN_ORIGIN are set after the first deploy (see DEPLOY.md).
+
+# SQLite files persist here across deploys/restarts.
+[mounts]
+  source = "strike_data"
+  destination = "/app/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # keep one machine alive so the watcher loop never stops and armed mandates keep firing
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
