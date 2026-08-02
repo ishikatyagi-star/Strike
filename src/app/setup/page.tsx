@@ -89,6 +89,24 @@ export default async function SetupPage() {
           detail="Test card saved on Prava's surface; per-purchase approval OFF; wallet cap mirrors mandate cap (M1)"
         />
       </ul>
+
+      {passkeyRegistered && (
+        <div className="mt-6 rounded-card border border-strike/40 bg-strike/5 p-5">
+          <p className="text-[15px] font-semibold text-strike">Passkey ready ✓</p>
+          <p className="mt-1 text-[13px] text-muted">
+            That’s the only thing that can sign a mandate. Next: create one, sign it, and arm it on Prava.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a href="/new" className="rounded bg-ink px-5 py-2.5 text-[14px] font-semibold text-bg hover:opacity-90">
+              ◉  Create your first mandate →
+            </a>
+            <a href="/demo" className="rounded border border-line bg-surface px-5 py-2.5 text-[14px] font-medium hover:border-strike">
+              Open the demo cockpit
+            </a>
+          </div>
+        </div>
+      )}
+
       <p className="mt-6 text-[13px] text-muted">
         Strike · conditional mandates on Prava rails · docs/ is the source of truth
       </p>
