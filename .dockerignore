@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+data
+.env*
+npm-debug.log*
+*.log
+docs/06-build-plan.md
