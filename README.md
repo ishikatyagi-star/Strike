@@ -12,8 +12,9 @@ disclosure, and roadmap. The formal Devfolio write-up lives in
 [`SUBMISSION.md`](SUBMISSION.md); the product contract and demo script are the
 single source of truth in [`docs/`](docs/) (Docs 1–5).
 
+- **▶ Try it live:** https://strike-production-3c6d.up.railway.app/demo
 - **Repository:** https://github.com/ishikatyagi-star/Strike
-- **Run it:** `npm install && npm run dev` → `http://localhost:3000/demo`
+- **Run it locally:** `npm install && npm run dev` → `http://localhost:3000/demo`
 - **Demo video:** *(placeholder — link to be added)*
 
 ---

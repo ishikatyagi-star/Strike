@@ -4,8 +4,9 @@
 > signature, a precise conditional mandate, then Prava enforces the final
 > merchant, amount, and single-use boundary — even if our app misbehaves.**
 
+**▶ Try it live:** https://strike-production-3c6d.up.railway.app/demo
 **Repository:** https://github.com/ishikatyagi-star/Strike
-**Run / judge access:** `npm install && npm run dev` → open `http://localhost:3000/demo`
+**Run locally:** `npm install && npm run dev` → `http://localhost:3000/demo`
 (sandbox keys required in `.env.local`; see *Repository & how to run* below).
 
 ---
