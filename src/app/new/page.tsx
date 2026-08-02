@@ -29,6 +29,7 @@ export default function NewMandate() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [phase, setPhase] = useState<Phase>("form");
   const [err, setErr] = useState("");
+  const [needsPasskey, setNeedsPasskey] = useState(false);
   const [armMsg, setArmMsg] = useState("");
 
   async function makeDraft() {
@@ -44,7 +45,8 @@ export default function NewMandate() {
     };
     const res = await (await fetch("/api/mandates/draft", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json();
     if (res.error) {
-      setErr(res.error.code === "REG_FAILED" ? "Register a passkey on /setup first." : `${res.error.code}: ${res.error.message}`);
+      setNeedsPasskey(res.error.code === "REG_FAILED");
+      setErr(res.error.code === "REG_FAILED" ? "You need a passkey before you can sign a mandate." : `${res.error.code}: ${res.error.message}`);
       setPhase("error");
       return;
     }
@@ -100,6 +102,9 @@ export default function NewMandate() {
       <p className="num text-xs uppercase tracking-[0.2em] text-muted">S1 · Create</p>
       <h1 className="mt-2 text-2xl font-semibold">Sign a conditional mandate</h1>
       <p className="mt-1 text-[15px] text-muted">Commit once. It executes only when your condition fires — and can never exceed what you sign.</p>
+      <a href="/setup" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] text-muted hover:border-strike hover:text-strike">
+        ◉ First time? Set up your passkey first →
+      </a>
 
       {(phase === "form" || phase === "drafting" || phase === "error") && (
         <div className="mt-8 rounded-card border border-line bg-surface p-5">
@@ -132,7 +137,16 @@ export default function NewMandate() {
           <button onClick={makeDraft} disabled={phase === "drafting"} className="mt-5 w-full rounded bg-strike/10 py-3 text-[15px] font-semibold text-strike ring-1 ring-inset ring-strike/30 hover:bg-strike/15 disabled:opacity-50">
             {phase === "drafting" ? "Parsing…" : "Review scope"}
           </button>
-          {phase === "error" && <p className="mt-3 text-[13px] text-danger">{err}</p>}
+          {phase === "error" && (
+            <div className="mt-3">
+              <p className="text-[13px] text-danger">{err}</p>
+              {needsPasskey && (
+                <a href="/setup" className="mt-3 inline-block w-full rounded bg-ink py-2.5 text-center text-[14px] font-semibold text-bg hover:opacity-90">
+                  ◉  Set up your passkey →
+                </a>
+              )}
+            </div>
+          )}
         </div>
       )}
 
