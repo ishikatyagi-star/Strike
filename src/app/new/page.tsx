@@ -20,6 +20,7 @@ type Draft = { mandate: { id: string; status: string }; signed_zone: SignedZone;
 type Phase = "form" | "drafting" | "review" | "signing" | "signed" | "arming" | "armed" | "error";
 
 export default function NewMandate() {
+  const [merchant, setMerchant] = useState("wavelength");
   const [trigger, setTrigger] = useState(180);
   const [cap, setCap] = useState(180);
   const [qty, setQty] = useState(1);
@@ -34,7 +35,7 @@ export default function NewMandate() {
     setPhase("drafting");
     setErr("");
     const body = utterance.trim() ? { utterance: utterance.trim() } : {
-      merchant_id: "wavelength",
+      merchant_id: merchant,
       item_sku: "airpods-pro",
       condition: { type: "price_below", price_cents: Math.round(trigger * 100) },
       max_total_cents: Math.round(cap * 100),
@@ -102,6 +103,19 @@ export default function NewMandate() {
 
       {(phase === "form" || phase === "drafting" || phase === "error") && (
         <div className="mt-8 rounded-card border border-line bg-surface p-5">
+          <label className="mb-4 block">
+            <span className="text-[12px] text-muted">Merchant</span>
+            <select
+              value={merchant}
+              onChange={(e) => setMerchant(e.target.value)}
+              className="mt-1 w-full rounded border border-line bg-bg px-3 py-2 text-[14px] outline-none focus:border-strike"
+            >
+              <option value="wavelength">Wavelength (demo merchant)</option>
+              <option value="amazon" disabled>Amazon — coming soon</option>
+              <option value="flipkart" disabled>Flipkart — coming soon</option>
+              <option value="apple" disabled>Apple — coming soon</option>
+            </select>
+          </label>
           <div className="grid grid-cols-2 gap-4">
             <NumField label="Buy if price below" prefix="$" value={trigger} onChange={setTrigger} />
             <NumField label="Max total (cap)" prefix="$" value={cap} onChange={setCap} />
