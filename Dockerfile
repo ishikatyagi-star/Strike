@@ -20,7 +20,6 @@ COPY . .
 RUN npm run build
 
 ENV NODE_ENV=production
-# Railway injects PORT; next start honours it. Default 3000 for local `docker run`.
 ENV PORT=3000
 EXPOSE 3000
 
@@ -28,4 +27,6 @@ EXPOSE 3000
 # disk there in your host's dashboard (Railway Volumes / Fly mounts) so they survive
 # redeploys. No Dockerfile mount directive here on purpose (Railway rejects it).
 
-CMD ["npm", "run", "start"]
+# Bind explicitly to 0.0.0.0:3000 so it matches the port the host routes to
+# (Railway may inject its own PORT var; the explicit -p flag wins and stays deterministic).
+CMD ["npx", "next", "start", "-H", "0.0.0.0", "-p", "3000"]
