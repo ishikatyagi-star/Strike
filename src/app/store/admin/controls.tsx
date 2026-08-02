@@ -32,7 +32,7 @@ export function AdminControls({
   }
 
   return (
-    <div className="wv-card">
+    <div className="wv-card" aria-busy={!!busy}>
       <div className="wv-admin-price">Merchant simulator · only AirPods has the verified Prava checkout path.</div>
       <div className="wv-admin-products">
         {products.map((product) => <div className="wv-admin-product" key={product.sku}>

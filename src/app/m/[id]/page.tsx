@@ -31,7 +31,7 @@ function badgeClass(status: string) {
   if (MONEY.has(status)) return "bg-strike/10 text-strike ring-strike/30";
   if (BAD.has(status)) return "bg-danger/10 text-danger ring-danger/30";
   if (WARN.has(status)) return "bg-warn/10 text-warn ring-warn/30";
-  return "bg-line/40 text-muted ring-line";
+  return "bg-[#eef0f3] text-[#5f5f5f] ring-[#d7d9df]";
 }
 
 // state name → UI copy (Doc: STRUCK is UI copy; the state is `triggered`)
@@ -54,14 +54,14 @@ function evColor(e: Ev) {
   if (GREEN_EV.has(e.event_type)) return "text-strike";
   if (RED_EV.has(e.event_type)) return "text-danger";
   if (AMBER_EV.has(e.event_type)) return "text-warn";
-  return "text-ink";
+  return "text-[#0a0a0a]";
 }
 function evDot(e: Ev) {
   if (pravaRefused(e)) return "bg-danger";
   if (GREEN_EV.has(e.event_type)) return "bg-strike";
   if (RED_EV.has(e.event_type)) return "bg-danger";
   if (AMBER_EV.has(e.event_type)) return "bg-warn";
-  return "bg-line";
+  return "bg-[#a8adb5]";
 }
 
 function evLabel(e: Ev) {
@@ -108,8 +108,8 @@ export default function MandateDetail({ params }: { params: Promise<{ id: string
     return () => { alive = false; clearInterval(t); };
   }, [id]);
 
-  if (err) return <main className="mx-auto max-w-2xl px-6 py-16"><p className="text-danger">{err}</p></main>;
-  if (!d) return <main className="mx-auto max-w-2xl px-6 py-16"><p className="text-muted">Loading…</p></main>;
+  if (err) return <main className="mx-auto min-h-[100dvh] max-w-3xl bg-white px-4 py-12 text-[#0a0a0a] sm:px-6 sm:py-16"><p className="rounded-xl border border-danger/30 bg-danger/5 p-4 text-danger" role="alert">{err}</p></main>;
+  if (!d) return <main className="mx-auto min-h-[100dvh] max-w-3xl bg-white px-4 py-12 text-[#0a0a0a] sm:px-6 sm:py-16"><p className="text-[#6b7280]" role="status">Loading…</p></main>;
 
   const { mandate: m } = d;
   const price = d.latest_price?.price_cents ?? null;
@@ -132,90 +132,90 @@ export default function MandateDetail({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-6 py-14">
-      <p className="num text-xs uppercase tracking-[0.2em] text-muted">S3 · Mandate</p>
-      <div className="mt-3 flex items-start gap-4">
+    <main className="mx-auto min-h-[100dvh] w-full max-w-3xl bg-white px-4 py-10 text-[#0a0a0a] sm:px-6 sm:py-14 lg:py-16">
+      <p className="num text-xs font-medium uppercase tracking-[0.2em] text-[#6b7280]">S3 · Mandate</p>
+      <div className="mt-5 flex items-start gap-4 rounded-2xl border border-[#e5e7eb] bg-[#f7f8fa] p-4 sm:p-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={m.item.image_url} width={52} height={52} alt="" className="rounded bg-white/5" />
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold">{m.item.display_name}</h1>
-            <span className={`num rounded px-2 py-0.5 text-[11px] uppercase tracking-wider ring-1 ring-inset ${badgeClass(m.status)}`}>
+        <img src={m.item.image_url} width={52} height={52} alt={m.item.display_name} className="rounded-xl border border-[#e5e7eb] bg-white object-cover" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-xl font-semibold tracking-[-0.025em] sm:text-2xl">{m.item.display_name}</h1>
+            <span className={`num rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider ring-1 ring-inset ${badgeClass(m.status)}`}>
               {m.status === "triggered" ? "struck" : m.status}
             </span>
           </div>
-          <p className="text-[13px] text-muted">{m.merchant.name} · buy if price &lt; {usd(m.condition.price_cents)} · cap {usd(m.max_total_cents)} · qty {m.quantity}</p>
+          <p className="mt-1 text-[13px] leading-5 text-[#5f5f5f]">{m.merchant.name} · buy if price &lt; {usd(m.condition.price_cents)} · cap {usd(m.max_total_cents)} · qty {m.quantity}</p>
         </div>
       </div>
 
       {/* live price ticker vs cap */}
-      <div className="mt-6 flex items-end gap-6 rounded-card border border-line bg-surface px-5 py-4">
+      <div className="mt-5 flex flex-wrap items-end gap-x-8 gap-y-4 rounded-2xl border border-[#e5e7eb] bg-white px-5 py-5 sm:px-6" aria-live="polite">
         <div>
-          <div className="num text-[11px] uppercase tracking-wider text-muted">live price</div>
-          <div className={`num text-[40px] leading-none ${belowCap ? "text-strike" : "text-ink"}`}>{price != null ? usd(price) : "—"}</div>
+          <div className="num text-[11px] font-medium uppercase tracking-wider text-[#6b7280]">live price</div>
+          <div className={`num mt-1 text-[40px] font-medium leading-none tracking-[-0.04em] sm:text-[44px] ${belowCap ? "text-strike" : "text-[#0a0a0a]"}`}>{price != null ? usd(price) : "—"}</div>
         </div>
         <div className="pb-1">
-          <div className="num text-[11px] uppercase tracking-wider text-muted">your trigger</div>
-          <div className="num text-[18px] text-muted">&lt; {usd(m.condition.price_cents)}</div>
+          <div className="num text-[11px] font-medium uppercase tracking-wider text-[#6b7280]">your trigger</div>
+          <div className="num mt-1 text-[18px] text-[#45515e]">&lt; {usd(m.condition.price_cents)}</div>
         </div>
-        {d.latest_price && !d.latest_price.in_stock && <div className="num pb-1 text-[12px] text-warn">out of stock</div>}
+        {d.latest_price && !d.latest_price.in_stock && <div className="num rounded-full bg-warn/10 px-2.5 py-1 text-[12px] text-warn">out of stock</div>}
       </div>
 
       {m.status === "failed" && (
-        <section className="mt-5 rounded-card border border-danger/40 bg-danger/5 p-4" role="alert">
-          <div className="num text-[11px] uppercase tracking-[0.18em] text-danger">Network declined</div>
-          <h2 className="mt-1 text-[15px] font-semibold text-danger">Prava refused this charge</h2>
-          <p className="mt-1 text-[13px] text-muted">{d.execution?.failure_reason ?? "The payment network refused to issue a credential outside the mandate."}</p>
+        <section className="mt-5 rounded-2xl border border-danger/30 bg-danger/5 p-5" role="alert">
+          <div className="num text-[11px] font-medium uppercase tracking-[0.18em] text-danger">Network declined</div>
+          <h2 className="mt-2 text-[15px] font-semibold text-danger">Prava refused this charge</h2>
+          <p className="mt-1 text-[13px] leading-5 text-[#5f5f5f]">{d.execution?.failure_reason ?? "The payment network refused to issue a credential outside the mandate."}</p>
         </section>
       )}
 
-      {d.narration && <p className="mt-4 text-[14px] text-muted">{d.narration}</p>}
+      {d.narration && <p className="mt-4 text-[14px] leading-6 text-[#5f5f5f]">{d.narration}</p>}
 
       {(m.status === "armed" || m.status === "triggered" || m.status === "executing") && (
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <button onClick={revoke} disabled={actionBusy} className="rounded border border-danger/40 px-3 py-2 text-[13px] font-medium text-danger hover:bg-danger/10 disabled:opacity-50">
+        <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-[#f7f8fa] p-4" aria-live="polite">
+          <button onClick={revoke} disabled={actionBusy} aria-busy={actionBusy} className="min-h-11 rounded-full border border-danger/40 bg-white px-4 py-2 text-[13px] font-medium text-danger transition-colors hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">
             {actionBusy ? "Working…" : "Revoke mandate"}
           </button>
           {m.demo_decline_available && m.status === "armed" && (
-            <button onClick={demonstrateDecline} disabled={actionBusy || !belowCap} className="rounded border border-danger/40 px-3 py-2 text-[13px] font-medium text-danger hover:bg-danger/10 disabled:opacity-50">
+            <button onClick={demonstrateDecline} disabled={actionBusy || !belowCap} aria-busy={actionBusy} className="min-h-11 rounded-full border border-danger/40 bg-white px-4 py-2 text-[13px] font-medium text-danger transition-colors hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">
               Prove network cap
             </button>
           )}
-          {m.demo_decline_available && m.status === "armed" && !belowCap && <span className="text-[12px] text-muted">Drop the price below the trigger to run the decline proof.</span>}
-          {action && <span className="text-[12px] text-muted">{action}</span>}
+          {m.demo_decline_available && m.status === "armed" && !belowCap && <span className="text-[12px] leading-5 text-[#6b7280]">Drop the price below the trigger to run the decline proof.</span>}
+          {action && <span className="text-[12px] leading-5 text-[#6b7280]">{action}</span>}
         </div>
       )}
 
       {/* timeline — the cascade */}
-      <h2 className="mt-8 num text-[11px] uppercase tracking-[0.2em] text-muted">Audit timeline</h2>
-      <ol className="mt-3 border-l border-line">
+      <h2 className="mt-9 num text-[11px] font-medium uppercase tracking-[0.2em] text-[#6b7280]">Audit timeline</h2>
+      <ol className="mt-4 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white px-5 sm:px-6">
         {d.events.map((e) => {
           const detail = evDetail(e);
           return (
-            <li key={e.seq} className="relative py-3 pl-6">
-              <span className={`absolute -left-[5px] top-4 h-[9px] w-[9px] rounded-full ${evDot(e)}`} />
+            <li key={e.seq} className="relative border-b border-[#eceef1] py-4 pl-7 last:border-b-0">
+              <span aria-hidden="true" className={`absolute left-0 top-5 h-[9px] w-[9px] rounded-full ${evDot(e)}`} />
               <div className="flex items-baseline justify-between gap-3">
                 <span className={`text-[14px] font-medium ${evColor(e)}`}>
                   {evLabel(e)}
                   {e.event_type === "EXECUTION_FULFILLED" && detail ? ` ${detail.split(" · ")[0]}` : ""}
                 </span>
-                <span className="num shrink-0 text-[11px] text-muted">{new Date(e.created_at).toLocaleTimeString()}</span>
+                <span className="num shrink-0 text-[11px] text-[#6b7280]">{new Date(e.created_at).toLocaleTimeString()}</span>
               </div>
-              {detail && e.event_type !== "EXECUTION_FULFILLED" && <div className="num mt-0.5 text-[12px] text-muted">{detail}</div>}
-              {e.event_type === "EXECUTION_FULFILLED" && detail.includes("••••") && <div className="num mt-0.5 text-[12px] text-muted">{detail.split(" · ")[1]}</div>}
-              <div className="num mt-0.5 text-[10px] uppercase tracking-wider text-muted/70">{e.actor}</div>
+              {detail && e.event_type !== "EXECUTION_FULFILLED" && <div className="num mt-1 text-[12px] leading-5 text-[#6b7280]">{detail}</div>}
+              {e.event_type === "EXECUTION_FULFILLED" && detail.includes("••••") && <div className="num mt-1 text-[12px] leading-5 text-[#6b7280]">{detail.split(" · ")[1]}</div>}
+              <div className="num mt-1 text-[10px] font-medium uppercase tracking-wider text-[#8a9099]">{e.actor}</div>
             </li>
           );
         })}
       </ol>
 
       {d.execution?.store_order_id && (
-        <p className="num mt-6 text-[12px] text-muted">Wavelength order {d.execution.store_order_id}</p>
+        <p className="num mt-6 text-[12px] text-[#6b7280]">Wavelength order {d.execution.store_order_id}</p>
       )}
       {m.status === "fulfilled" && (
-        <a href={`/m/${id}/receipt`} className="mt-5 inline-block text-[13px] text-link hover:underline">View verifiable receipt →</a>
+        <a href={`/m/${id}/receipt`} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#0a0a0a] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#242424] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">View verifiable receipt →</a>
       )}
-      <div className="num mt-6 break-all border-t border-line pt-4 text-[10px] text-muted/70">hash {m.mandate_hash}</div>
+      <div className="num mt-8 break-all border-t border-[#e5e7eb] pt-4 text-[10px] leading-5 text-[#8a9099]">hash {m.mandate_hash}</div>
     </main>
   );
 }

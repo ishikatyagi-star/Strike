@@ -31,18 +31,20 @@ export function RegisterPasskey({ registered }: { registered: boolean }) {
   }
 
   if (state === "done") {
-    return <span className="num text-xs uppercase tracking-wider text-strike">registered</span>;
+    return <span className="num w-fit rounded-full border border-strike/25 bg-strike/10 px-3 py-1.5 text-[10px] uppercase tracking-wider text-strike sm:justify-self-end">registered</span>;
   }
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex w-full flex-col items-start gap-2 sm:w-auto sm:items-end sm:justify-self-end">
       <button
         onClick={register}
         disabled={state === "working"}
-        className="rounded border border-line bg-surface px-3 py-1.5 text-[13px] font-medium hover:border-strike disabled:opacity-50"
+        aria-busy={state === "working"}
+        aria-describedby={state === "error" ? "passkey-registration-error" : undefined}
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-ink px-5 text-[13px] font-semibold text-bg transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
       >
         {state === "working" ? "Follow the prompt…" : "Register Touch ID"}
       </button>
-      {state === "error" && <span className="max-w-[200px] text-right text-[11px] text-danger">{msg}</span>}
+      {state === "error" && <span id="passkey-registration-error" role="alert" className="max-w-[240px] text-left text-[11px] leading-4 text-danger sm:text-right">{msg}</span>}
     </div>
   );
 }

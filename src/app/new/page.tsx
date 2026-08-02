@@ -98,22 +98,22 @@ export default function NewMandate() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-xl px-6 py-16">
-      <p className="num text-xs uppercase tracking-[0.2em] text-muted">S1 · Create</p>
-      <h1 className="mt-2 text-2xl font-semibold">Sign a conditional mandate</h1>
-      <p className="mt-1 text-[15px] text-muted">Commit once. It executes only when your condition fires — and can never exceed what you sign.</p>
-      <a href="/setup" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] text-muted hover:border-strike hover:text-strike">
+    <main className="mx-auto min-h-[100dvh] w-full max-w-3xl bg-white px-4 py-10 text-[#0a0a0a] sm:px-6 sm:py-14 lg:py-16">
+      <p className="num text-xs font-medium uppercase tracking-[0.2em] text-[#6b7280]">S1 · Create</p>
+      <h1 className="mt-3 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">Sign a conditional mandate</h1>
+      <p className="mt-3 max-w-2xl text-[15px] leading-6 text-[#5f5f5f] sm:text-base">Commit once. It executes only when your condition fires — and can never exceed what you sign.</p>
+      <a href="/setup" className="mt-5 inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[#d7d9df] bg-white px-4 py-2 text-[13px] font-medium text-[#30343b] transition-colors hover:border-[#0a0a0a] hover:text-[#0a0a0a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">
         ◉ First time? Set up your passkey first →
       </a>
 
       {(phase === "form" || phase === "drafting" || phase === "error") && (
-        <div className="mt-8 rounded-card border border-line bg-surface p-5">
+        <div className="mt-8 rounded-2xl border border-[#e5e7eb] bg-[#f7f8fa] p-5 sm:p-6">
           <label className="mb-4 block">
-            <span className="text-[12px] text-muted">Merchant</span>
+            <span className="text-[13px] font-medium text-[#45515e]">Merchant</span>
             <select
               value={merchant}
               onChange={(e) => setMerchant(e.target.value)}
-              className="mt-1 w-full rounded border border-line bg-bg px-3 py-2 text-[14px] outline-none focus:border-strike"
+              className="mt-2 min-h-11 w-full rounded-lg border border-[#d7d9df] bg-white px-3 py-2 text-[14px] text-[#0a0a0a] outline-none transition-colors focus:border-[#1d4ed8] focus:ring-2 focus:ring-[#1d4ed8]/15"
             >
               <option value="wavelength">Wavelength (demo merchant)</option>
               <option value="amazon" disabled>Amazon — coming soon</option>
@@ -121,27 +121,27 @@ export default function NewMandate() {
               <option value="apple" disabled>Apple — coming soon</option>
             </select>
           </label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <NumField label="Buy if price below" prefix="$" value={trigger} onChange={setTrigger} />
             <NumField label="Max total (cap)" prefix="$" value={cap} onChange={setCap} />
             <NumField label="Quantity" value={qty} onChange={setQty} min={1} max={10} />
             <NumField label="Valid for (days)" value={days} onChange={setDays} min={1} max={7} />
           </div>
           <label className="mt-4 block">
-            <span className="text-[12px] text-muted">Or describe it in your own words</span>
-            <input value={utterance} onChange={(e) => setUtterance(e.target.value)} placeholder="Buy AirPods under $180 within 3 days" className="mt-1 w-full rounded border border-line bg-bg px-3 py-2 text-[14px] outline-none focus:border-strike" />
+            <span className="text-[13px] font-medium text-[#45515e]">Or describe it in your own words</span>
+            <input value={utterance} onChange={(e) => setUtterance(e.target.value)} placeholder="Buy AirPods under $180 within 3 days" className="mt-2 min-h-11 w-full rounded-lg border border-[#d7d9df] bg-white px-3 py-2 text-[14px] text-[#0a0a0a] outline-none transition-colors placeholder:text-[#8a9099] focus:border-[#1d4ed8] focus:ring-2 focus:ring-[#1d4ed8]/15" />
           </label>
-          <div className="mt-3 text-[13px] text-muted">
-            AirPods Pro · Wavelength — buy <b className="text-ink">1</b> if the price drops under <b className="text-strike">{usd(Math.round(trigger * 100))}</b>, spending at most <b className="text-ink">{usd(Math.round(cap * 100))}</b>, within {days} days.
+          <div className="mt-5 rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[13px] leading-5 text-[#5f5f5f]">
+            AirPods Pro · Wavelength — buy <b className="text-[#0a0a0a]">1</b> if the price drops under <b className="text-strike">{usd(Math.round(trigger * 100))}</b>, spending at most <b className="text-[#0a0a0a]">{usd(Math.round(cap * 100))}</b>, within {days} days.
           </div>
-          <button onClick={makeDraft} disabled={phase === "drafting"} className="mt-5 w-full rounded bg-strike/10 py-3 text-[15px] font-semibold text-strike ring-1 ring-inset ring-strike/30 hover:bg-strike/15 disabled:opacity-50">
+          <button onClick={makeDraft} disabled={phase === "drafting"} aria-busy={phase === "drafting"} className="mt-5 min-h-12 w-full rounded-full bg-[#0a0a0a] px-5 py-3 text-[15px] font-semibold text-white transition-[background-color,transform] hover:bg-[#242424] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-[#d7d9df] disabled:text-[#777d86] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">
             {phase === "drafting" ? "Parsing…" : "Review scope"}
           </button>
           {phase === "error" && (
-            <div className="mt-3">
-              <p className="text-[13px] text-danger">{err}</p>
+            <div className="mt-4 rounded-xl border border-danger/30 bg-danger/5 p-4" role="alert">
+              <p className="text-[13px] leading-5 text-danger">{err}</p>
               {needsPasskey && (
-                <a href="/setup" className="mt-3 inline-block w-full rounded bg-ink py-2.5 text-center text-[14px] font-semibold text-bg hover:opacity-90">
+                <a href="/setup" className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#0a0a0a] px-5 py-2.5 text-center text-[14px] font-semibold text-white transition-colors hover:bg-[#242424] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">
                   ◉  Set up your passkey →
                 </a>
               )}
@@ -151,43 +151,43 @@ export default function NewMandate() {
       )}
 
       {(phase === "review" || phase === "signing") && draft && (
-        <div className="mt-8">
+        <div className="mt-8" aria-live="polite">
           <ScopeCard z={draft.signed_zone} hash={draft.mandate_hash} />
-          <p className="mt-3 text-center text-[12px] text-muted">What you see is what you sign — this exact scope is hashed and covered by your passkey.</p>
-          <button onClick={sign} disabled={phase === "signing"} className="mt-4 w-full rounded bg-ink py-3 text-[15px] font-semibold text-bg hover:opacity-90 disabled:opacity-60">
+          <p className="mt-3 text-center text-[12px] leading-5 text-[#6b7280]">What you see is what you sign — this exact scope is hashed and covered by your passkey.</p>
+          <button onClick={sign} disabled={phase === "signing"} aria-busy={phase === "signing"} className="mt-4 min-h-12 w-full rounded-full bg-[#0a0a0a] px-5 py-3 text-[15px] font-semibold text-white transition-[background-color,transform] hover:bg-[#242424] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-[#d7d9df] disabled:text-[#777d86] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">
             {phase === "signing" ? "Waiting for Touch ID…" : "◉  Sign with Touch ID"}
           </button>
         </div>
       )}
 
       {(phase === "signed" || phase === "arming") && draft && (
-        <div className="mt-8">
-          <div className="rounded-card border border-strike/40 bg-strike/5 p-6 text-center">
-            <div className="num text-xs uppercase tracking-[0.2em] text-strike">signed</div>
-            <h2 className="mt-2 text-xl font-semibold">Mandate signed ✓</h2>
-            <p className="mt-1 text-[14px] text-muted">Your passkey signature is bound to the exact scope. One more step: authorize the payment on Prava (a scoped, one-time mandate).</p>
+        <div className="mt-8" aria-live="polite">
+          <div className="rounded-2xl border border-strike/30 bg-strike/5 p-6">
+            <div className="num text-xs font-medium uppercase tracking-[0.2em] text-strike">signed</div>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.025em]">Mandate signed ✓</h2>
+            <p className="mt-2 text-[14px] leading-6 text-[#5f5f5f]">Your passkey signature is bound to the exact scope. One more step: authorize the payment on Prava (a scoped, one-time mandate).</p>
           </div>
           {phase === "signed" ? (
-            <button onClick={arm} className="mt-4 w-full rounded bg-ink py-3 text-[15px] font-semibold text-bg hover:opacity-90">◉  Arm on Prava →</button>
+            <button onClick={arm} className="mt-4 min-h-12 w-full rounded-full bg-[#0a0a0a] px-5 py-3 text-[15px] font-semibold text-white transition-[background-color,transform] hover:bg-[#242424] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">◉  Arm on Prava →</button>
           ) : (
-            <div className="mt-4 rounded-card border border-line bg-surface p-5 text-center">
-              <p className="text-[14px]">{armMsg}</p>
-              <button onClick={arm} className="mt-3 text-[13px] text-link hover:underline">Check again</button>
+            <div className="mt-4 rounded-2xl border border-[#e5e7eb] bg-[#f7f8fa] p-5 text-center">
+              <p className="text-[14px] leading-6 text-[#30343b]">{armMsg}</p>
+              <button onClick={arm} className="mt-3 min-h-11 rounded-full border border-[#d7d9df] bg-white px-4 py-2 text-[13px] font-medium text-[#17437d] transition-colors hover:border-[#17437d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">Check again</button>
             </div>
           )}
         </div>
       )}
 
       {phase === "armed" && draft && (
-        <div className="mt-8 rounded-card border border-strike/40 bg-strike/5 p-6 text-center">
-          <div className="num text-xs uppercase tracking-[0.2em] text-strike">armed</div>
-          <h2 className="mt-2 text-xl font-semibold">Armed — watching ✓</h2>
-          <p className="mt-1 text-[14px] text-muted">No card is on file anywhere. Strike is watching the price; it executes the instant your condition fires.</p>
-          <a href={`/m/${draft.mandate.id}`} className="mt-4 inline-block rounded bg-ink px-5 py-2.5 text-[14px] font-semibold text-bg hover:opacity-90">View live →</a>
+        <div className="mt-8 rounded-2xl border border-strike/30 bg-strike/5 p-6 text-center" aria-live="polite">
+          <div className="num text-xs font-medium uppercase tracking-[0.2em] text-strike">armed</div>
+          <h2 className="mt-3 text-2xl font-semibold tracking-[-0.025em]">Armed — watching ✓</h2>
+          <p className="mx-auto mt-2 max-w-lg text-[14px] leading-6 text-[#5f5f5f]">No card is on file anywhere. Strike is watching the price; it executes the instant your condition fires.</p>
+          <a href={`/m/${draft.mandate.id}`} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#0a0a0a] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#242424] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2">View live →</a>
         </div>
       )}
 
-      {phase === "error" && draft && <p className="mt-3 text-center text-[13px] text-danger">{err}</p>}
+      {phase === "error" && draft && <p className="mt-4 rounded-xl border border-danger/30 bg-danger/5 p-4 text-center text-[13px] text-danger" role="alert">{err}</p>}
     </main>
   );
 }
@@ -195,10 +195,10 @@ export default function NewMandate() {
 function NumField({ label, prefix, value, onChange, min = 0, max = 100000 }: { label: string; prefix?: string; value: number; onChange: (n: number) => void; min?: number; max?: number }) {
   return (
     <label className="block">
-      <span className="text-[12px] text-muted">{label}</span>
-      <div className="mt-1 flex items-center rounded border border-line bg-bg px-3 py-2 focus-within:border-strike">
-        {prefix && <span className="mr-1 text-muted">{prefix}</span>}
-        <input type="number" value={value} min={min} max={max} onChange={(e) => onChange(Number(e.target.value))} className="num w-full bg-transparent text-[15px] outline-none" />
+      <span className="text-[13px] font-medium text-[#45515e]">{label}</span>
+      <div className="mt-2 flex min-h-11 items-center rounded-lg border border-[#d7d9df] bg-white px-3 py-2 transition-colors focus-within:border-[#1d4ed8] focus-within:ring-2 focus-within:ring-[#1d4ed8]/15">
+        {prefix && <span className="mr-1 text-[#6b7280]">{prefix}</span>}
+        <input type="number" value={value} min={min} max={max} onChange={(e) => onChange(Number(e.target.value))} className="num w-full bg-transparent text-[15px] text-[#0a0a0a] outline-none" />
       </div>
     </label>
   );
@@ -206,16 +206,16 @@ function NumField({ label, prefix, value, onChange, min = 0, max = 100000 }: { l
 
 function ScopeCard({ z, hash }: { z: SignedZone; hash: string }) {
   return (
-    <div className="rounded-card border border-line bg-surface p-5">
+    <div className="rounded-2xl border border-[#e5e7eb] bg-[#f7f8fa] p-5 sm:p-6">
       <div className="flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={z.item.image_url} width={44} height={44} alt="" className="rounded bg-white/5" />
+        <img src={z.item.image_url} width={44} height={44} alt={z.item.display_name} className="rounded-xl border border-[#e5e7eb] bg-white object-cover" />
         <div>
-          <div className="text-[15px] font-semibold">{z.item.display_name}</div>
-          <div className="text-xs text-muted">{z.merchant.name} · {z.merchant.country}</div>
+          <div className="text-[15px] font-semibold text-[#0a0a0a]">{z.item.display_name}</div>
+          <div className="mt-0.5 text-xs text-[#6b7280]">{z.merchant.name} · {z.merchant.country}</div>
         </div>
       </div>
-      <dl className="mt-5 grid grid-cols-2 gap-y-4">
+      <dl className="mt-5 grid grid-cols-1 gap-4 border-t border-[#e5e7eb] pt-5 sm:grid-cols-2 sm:gap-y-5">
         <Field k="Condition" v={`price < ${usd(z.condition.price_cents)}`} accent />
         <Field k="Max total" v={usd(z.max_total_cents)} />
         <Field k="Quantity" v={String(z.quantity)} />
@@ -223,9 +223,9 @@ function ScopeCard({ z, hash }: { z: SignedZone; hash: string }) {
         <Field k="Valid until" v={new Date(z.valid_until).toLocaleString()} />
         <Field k="Mode" v={z.mode.replace("_", "-")} />
       </dl>
-      <div className="mt-5 border-t border-line pt-3">
-        <div className="num text-[11px] uppercase tracking-wider text-muted">mandate hash · sha-256(JCS)</div>
-        <div className="num mt-1 break-all text-[11px] text-muted">{hash}</div>
+      <div className="mt-5 border-t border-[#e5e7eb] pt-4">
+        <div className="num text-[11px] font-medium uppercase tracking-wider text-[#6b7280]">mandate hash · sha-256(JCS)</div>
+        <div className="num mt-1.5 break-all text-[11px] leading-5 text-[#6b7280]">{hash}</div>
       </div>
     </div>
   );
@@ -234,8 +234,8 @@ function ScopeCard({ z, hash }: { z: SignedZone; hash: string }) {
 function Field({ k, v, accent }: { k: string; v: string; accent?: boolean }) {
   return (
     <div>
-      <dt className="text-[11px] uppercase tracking-wider text-muted">{k}</dt>
-      <dd className={`num mt-0.5 text-[15px] ${accent ? "text-strike" : "text-ink"}`}>{v}</dd>
+      <dt className="text-[11px] font-medium uppercase tracking-wider text-[#6b7280]">{k}</dt>
+      <dd className={`num mt-1 text-[15px] ${accent ? "text-strike" : "text-[#0a0a0a]"}`}>{v}</dd>
     </div>
   );
 }
