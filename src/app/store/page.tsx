@@ -17,8 +17,8 @@ export default function StorePage() {
     <div className="wv-wrap">
       <Refresher />
       <header className="wv-head">
-        <div className="wv-brand"><span className="wv-logo" />Wavelength</div>
-        <nav className="wv-nav">Audio · Home · Support</nav>
+        <div className="wv-brand"><span className="wv-logo" aria-hidden="true" />Wavelength</div>
+        <nav className="wv-nav" aria-label="Store navigation">Audio · Home · Support</nav>
       </header>
 
       <main className="wv-main">
@@ -42,8 +42,8 @@ export default function StorePage() {
       </main>
 
       {order && order.status === "captured" && (
-        <section className="wv-confirm">
-          <div className="wv-check">✓</div>
+        <section className="wv-confirm" role="status" aria-live="polite">
+          <div className="wv-check" aria-hidden="true">✓</div>
           <div>
             <div className="wv-confirm-title">Order confirmed</div>
             <div className="wv-confirm-sub">
@@ -59,7 +59,7 @@ export default function StorePage() {
           {catalog.map((product) => (
             <article className="wv-product-card" key={product.sku}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={product.imageUrl} alt="" />
+              <img src={product.imageUrl} alt={product.name} />
               <div className="wv-product-name">{product.name}</div>
               <div className="wv-product-price">{usd(product.priceCents)}</div>
               <div className="wv-product-note">Catalog item · checkout coming soon</div>

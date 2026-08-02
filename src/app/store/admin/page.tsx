@@ -13,7 +13,7 @@ export default async function AdminPage() {
     <div className="wv-wrap">
       <header className="wv-head">
         <div className="wv-brand">
-          <span className="wv-logo" />Wavelength<span className="wv-admin-tag">admin</span>
+          <span className="wv-logo" aria-hidden="true" />Wavelength<span className="wv-admin-tag">admin</span>
         </div>
       </header>
 

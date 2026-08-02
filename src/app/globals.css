@@ -1,41 +1,91 @@
 @import "tailwindcss";
 
-/* Doc 5 §2 — The Instrument. The only place colors are defined. */
+/* Doc 5 §2. MiniMax-inspired Strike tokens; money-state colors stay semantic. */
 :root {
-  --bg: #0a0e12;
-  --surface: #111820;
-  --line: #1f2933;
-  --ink: #e8eff5;
-  --muted: #8a97a5;
-  --strike: #00e5a0; /* money states ONLY */
-  --warn: #ffb224;
-  --danger: #ff5d5d;
-  --link: #6ea8ff;
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --surface-soft: #f2f3f5;
+  --line: #e5e7eb;
+  --ink: #0a0a0a;
+  --muted: #5f5f5f;
+  --strike: #087a55; /* money states ONLY */
+  --strike-soft: #e8ffea;
+  --warn: #8a5200;
+  --warn-soft: #fff4d8;
+  --danger: #b4233a;
+  --danger-soft: #fff0f2;
+  --link: #17437d;
+  --accent: #1456f0;
+  --accent-soft: #eef4ff;
+  --coral: #d94727;
+  --coral-soft: #fff0eb;
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
   --color-line: var(--line);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-strike: var(--strike);
+  --color-strike-soft: var(--strike-soft);
   --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --color-link: var(--link);
-  --font-sans: var(--font-geist-sans);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-coral: var(--coral);
+  --color-coral-soft: var(--coral-soft);
+  --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-geist-mono);
-  --radius-card: 4px;
+  --radius-card: 16px;
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
 }
 
 /* every numeral in the app is tabular mono (Doc 5 §2) */
 .num {
   font-family: var(--font-geist-mono), monospace;
   font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
