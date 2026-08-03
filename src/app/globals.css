@@ -20,6 +20,9 @@
   --accent-soft: #eef4ff;
   --coral: #d94727;
   --coral-soft: #fff0eb;
+  --shadow-card: 0 18px 50px rgba(15, 23, 42, 0.07);
+  --radius-card: 1.25rem;
+  --radius-panel: 1.75rem;
 }
 
 @theme inline {
@@ -42,7 +45,7 @@
   --color-coral-soft: var(--coral-soft);
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-geist-mono);
-  --radius-card: 16px;
+  --radius-card: var(--radius-card);
 }
 
 html {
@@ -77,6 +80,81 @@ textarea {
 .num {
   font-family: var(--font-geist-mono), monospace;
   font-variant-numeric: tabular-nums;
+}
+
+.boundary-rail {
+  position: relative;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ink);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.truth-label {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  padding: 0.25rem 0.65rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+.truth-label-green { border-color: color-mix(in srgb, var(--strike) 30%, white); background: var(--strike-soft); color: var(--strike); }
+.truth-label-blue { border-color: #c9d8f0; background: var(--accent-soft); color: var(--link); }
+
+.wavelength-panel {
+  --wv-bg: #fbfbf5;
+  --wv-surface: #ffffff;
+  --wv-line: #e4e4e0;
+  --wv-muted: #61615d;
+  --wv-accent: #c1fbd4;
+  --wv-accent-soft: #e7faec;
+  --wv-accent-line: #9fc9ae;
+  border-color: var(--wv-line);
+  background: var(--wv-bg);
+  color: #080808;
+  font-family: var(--font-wavelength), Inter, Helvetica, Arial, sans-serif;
+}
+
+.demo-progress { margin-bottom: 2rem; overflow-x: auto; padding: 0.2rem 0.1rem 0.6rem; }
+.demo-progress ol { display: grid; min-width: 640px; grid-template-columns: repeat(5, minmax(0, 1fr)); list-style: none; }
+.demo-progress li { position: relative; display: flex; align-items: center; gap: 0.55rem; color: var(--muted); font-size: 0.72rem; }
+.demo-progress li::after { content: ""; position: absolute; left: 2rem; right: 0.5rem; top: 0.8rem; height: 1px; background: var(--line); }
+.demo-progress li:last-child::after { display: none; }
+.demo-progress li > span { position: relative; z-index: 1; display: grid; width: 1.65rem; height: 1.65rem; place-items: center; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); font-family: var(--font-geist-mono), monospace; }
+.demo-progress li[aria-current="step"] { color: var(--ink); }
+.demo-progress li[aria-current="step"] > span { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.demo-progress li[data-complete] > span { border-color: var(--strike); color: var(--strike); }
+
+@media (max-width: 700px) {
+  .demo-progress { margin-bottom: 3rem; overflow: visible; }
+  .demo-progress ol { min-width: 0; }
+  .demo-progress li { justify-content: center; }
+  .demo-progress li::after { left: calc(50% + 1rem); right: calc(-50% + 1rem); }
+  .demo-progress li strong {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .demo-progress li[aria-current="step"] strong {
+    top: 2rem;
+    width: max-content;
+    max-width: 6rem;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
