@@ -31,6 +31,33 @@ Setup on screen: **the `/demo` cockpit**, with Strike's live mandate on the left
 
 **Backup:** a pre-recorded video of the exact same run, cut by hour 44, on a USB stick *and* a phone.
 
+## Self-guided narrative (judge, about five minutes)
+
+The presenter-operated script above remains the fastest live pitch. The self-guided
+entry at `/demo` teaches the same trust model without requiring narration:
+
+1. **Start clean.** Choose **Run the live demo**. Strike waits for the merchant
+   self-unlock, restores Wavelength's catalogue, stock, and merchant orders, then
+   opens `/setup?guided=1`. Strike mandates and append-only audit history are not
+   reset. If restoration fails, the judge can retry or continue at the current
+   live price.
+2. **Register the signer.** Guided setup shows only the passkey task and its
+   plain-language purpose; normal `/setup` keeps the complete operator pre-flight.
+3. **Set and approve the rule.** Guided creation offers successful purchase
+   ($180 trigger / $180 cap), protection proof ($180 trigger / $170 cap), or
+   custom limits. The judge reviews the exact ScopeCard, signs it, then separately
+   approves the one-time mandate on Prava.
+4. **Change the market.** The guided cockpit keeps Strike's real timeline beside
+   the complete Wavelength catalogue. Price controls show a quantity-aware preview;
+   only the existing watcher, spend gate, Prava calls, and checkout produce events
+   and outcomes.
+5. **Verify and continue.** Fulfillment links to the signed receipt and a fresh
+   protection scenario; a real network decline links to a fresh success scenario.
+   Every new scenario returns through drafting, signing, and Prava approval.
+
+**Explore an existing mandate** selects the newest active mandate, otherwise the
+newest completed one, and opens the operator cockpit without guided progress.
+
 ## Out of scope (deliberately not building)
 
 - Real-merchant checkout (Amazon, ticketing, airlines) — Wavelength's additional catalogue items are visual merchant context only; AirPods Pro is the sole verified checkout path. Real merchants remain the roadmap slide.

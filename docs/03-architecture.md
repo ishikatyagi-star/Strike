@@ -98,10 +98,30 @@ Everything Prava lives in **one module: `src/lib/prava.ts`** — typed client, 1
 
 ## 7. Demo mode — deterministic drop, real payments
 
+- **Query-driven presentation:** Next.js Server Component page wrappers normalize
+  async `searchParams` and pass simple guided/scenario values to their client
+  implementations. `/demo` is the entry, `/demo?mandate=<id>` is the operator
+  cockpit, and `/demo?guided=1&mandate=<id>` adds guided progress. Guided setup,
+  creation, and receipt use `/setup?guided=1`,
+  `/new?guided=1&scenario=success|protection|custom`, and
+  `/m/<id>/receipt?guided=1`. These are presentation modes, not new routes or API
+  contracts.
+- **Guided reads and reset:** guided creation performs one `GET /store/api/catalog`
+  to display the current Wavelength price. **Run the live demo** and **Restore
+  Wavelength** reuse the existing `POST /store/admin/reset`; no new network surface
+  is introduced.
 - **The lever:** `POST /store/admin/price {sku, price_cents}` behind an admin cookie, with a big red button on `/store/admin`. Clicking it updates the DB price; the watcher notices on its next 3 s tick. Nothing about Strike knows the lever exists — the watcher reads the same product API any adapter would.
-- **The decline beat (Beat 5), with a real refusal:** the mandate's own **`amount` cap is the guardrail** — nothing extra to configure. On stage, `DEMO_BYPASS_GATE` (compiled out unless `DEMO=1`) skips *our* app-layer cap check and issues a charge **above the mandate cap**; Prava refuses to mint: `status:"failed"`, `errorMessage:"THRESHOLD_EXCEEDED"` — a real card-network refusal with our own code as the attacker. Fallbacks (all real Prava errors, none faked): a listed-scope violation (`MANDATE_MERCHANT_NOT_ALLOWED`, 403), or charging a `consumed`/revoked mandate (`MANDATE_NOT_ACTIVE`, 409).
-- **Decline demo hold:** only while `DEMO=1`, an armed `price_below` mandate whose signed cap is below its trigger remains armed after the watcher observes a true condition. The watcher continues recording live snapshots, but deliberately leaves the one actual trigger to the visible **Prove network cap** action. That action enters the usual condition CAS and executor; it skips only the app-layer cap comparison and still performs signature, state, expiry, and stock checks. This prevents a stage-timing race with the normal re-arm behavior; production watcher behavior is unchanged.
-- **Reset:** `/store/admin` also has "Reset demo" — price back to $199, demo mandates cleared, executions archived. Rehearsable end-to-end in under a minute.
+- **The decline beat (Beat 5), with a real refusal:** in `DEMO=1`, the existing
+  watcher deliberately keeps a cap-below-trigger protection mandate `armed` after
+  the $174 quote crosses its $180 trigger. No payment is attempted and no synthetic
+  abort event is added. The existing **Prove network limit** action then enters the
+  demo-decline path, which skips only the app-layer cap comparison and asks Prava to
+  mint above the signed $170 mandate cap. Prava refuses with
+  `THRESHOLD_EXCEEDED`, a real network refusal. Changing the merchant price never
+  invokes the decline path automatically.
+- **Reset boundary:** the existing merchant reset restores Wavelength prices and
+  stock and clears Wavelength orders. It never deletes or rewrites Strike
+  mandates, executions, or append-only audit history.
 - **What is never simulated:** session creation, passkey prompts, token minting, status reporting. If Prava sandbox is down at demo time, we play the backup video (Doc 1) — we do not stub the payment.
 
 ## Assumptions

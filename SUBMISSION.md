@@ -319,7 +319,13 @@ npm install
 npm run dev            # boots Strike + Wavelength + watcher on :3000
 ```
 
-Then open **`http://localhost:3000/demo`** — the operator cockpit. The core flow:
+Then open **`http://localhost:3000/demo`**. For the self-guided judge path, choose
+**Run the live demo** and follow the five visible steps: passkey setup, mandate
+draft, signature and Prava approval, live Wavelength market test, and verified
+receipt. Choose **Explore an existing mandate** to inspect the newest suitable
+mandate without creating another one.
+
+For the presenter-operated version, the same cockpit stays under three minutes:
 
 1. Compose a mandate in natural language on `/new` (or use the seeded one).
 2. Sign with Touch ID → **Arm on Prava** (one passkey approval).

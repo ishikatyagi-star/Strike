@@ -130,7 +130,10 @@ present the mock merchant as a real integration.
 - `/demo` is a **single link**: it self-unlocks the merchant lever
   (`POST /store/admin/unlock`), so a judge never types another URL.
 - **Flexible price control** (slider + number input) so judges set any price, plus
-  a guided **4-step walkthrough** and the problem statement in the header.
+  a guided **five-step flow** and the problem statement in the header.
+- **Judge path:** open `/demo` and choose **Run the live demo** for setup → draft
+  → sign/approve → market test → verified receipt. **Explore an existing mandate**
+  opens the newest suitable mandate without changing it.
 - `/setup` shows a **"what next"** CTA after passkey registration; `/new` links to
   `/setup` for first-timers; a **merchant selector** labels "Wavelength (demo
   merchant)" with Amazon/Flipkart/Apple as disabled "coming soon" (roadmap).
@@ -210,11 +213,11 @@ Sandbox env vars in `.env.local` (never committed) — full list in
 
 | Route | Purpose |
 |---|---|
-| `/demo` | **The single demo link** — walkthrough + live mandate (iframe) + merchant lever |
-| `/setup` | Passkey registration + pre-flight checklist (+ "what next" CTA) |
-| `/new` | Create → ScopeCard → sign (Touch ID) → Arm on Prava (operator step) |
+| `/demo` | **The single demo link** — self-guided entry; `?mandate=<id>` opens the operator cockpit and `?guided=1&mandate=<id>` adds guided progress |
+| `/setup` | Passkey registration + pre-flight checklist; `?guided=1` shows the passkey task only |
+| `/new` | Create → ScopeCard → sign (Touch ID) → Arm on Prava; `?guided=1&scenario=success|protection|custom` selects guided copy and presets |
 | `/m/[id]` | Live mandate timeline (embedded in `/demo` via iframe) |
-| `/m/[id]/receipt` | Verifiable receipt + JSON bundle |
+| `/m/[id]/receipt` | Verifiable receipt + JSON bundle; `?guided=1` adds the final guided step |
 | `/store`, `/store/admin` | Wavelength storefront + operator price lever |
 
 Source layout is in [`README.md`](README.md#repo-layout). The demo cockpit is
