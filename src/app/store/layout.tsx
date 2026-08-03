@@ -3,22 +3,23 @@ import type { ReactNode } from "react";
 // Wavelength's own visual world: warm commerce surfaces, black pill actions, and aloe accents.
 // The scoped visual boundary remains the architecture boundary described in Doc 5 §1/§2.
 const css = `
-.wv-root{min-height:100dvh;background:#fbfbf5;color:#000;
+.wv-root{--wv-bg:#fbfbf5;--wv-surface:#fff;--wv-line:#e4e4e0;--wv-muted:#61615d;--wv-aloe:#c1fbd4;--wv-aloe-soft:#d4f9e0;--wv-focus:#658c7a;--wv-radius:12px;
+  min-height:100dvh;background:var(--wv-bg);color:#000;
   font-family:var(--font-wavelength),Inter,Helvetica,Arial,sans-serif;font-feature-settings:"ss03";}
 .wv-wrap{width:min(1180px,100%);margin:0 auto;padding:24px 28px 80px;}
 .wv-head{min-height:64px;display:flex;justify-content:space-between;align-items:center;gap:24px;
-  padding:12px 0 20px;border-bottom:1px solid #e4e4e7;}
+  padding:12px 0 20px;border-bottom:1px solid var(--wv-line);}
 .wv-brand{display:flex;align-items:center;gap:11px;font-size:21px;font-weight:550;letter-spacing:.01em;}
 .wv-logo{position:relative;width:34px;height:22px;display:inline-block;overflow:hidden;border-radius:9999px;background:#000;}
 .wv-logo::after{content:"";position:absolute;inset:6px 7px;border-top:2px solid #c1fbd4;border-bottom:2px solid #c1fbd4;transform:skewX(-20deg);}
 .wv-nav{color:#52525b;font-size:14px;font-weight:500;letter-spacing:.01em;}
-.wv-admin-tag{margin-left:3px;padding:4px 10px;border-radius:9999px;background:#c1fbd4;color:#000;
+.wv-admin-tag{margin-left:3px;padding:4px 10px;border-radius:9999px;background:var(--wv-aloe);color:#000;
   font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;}
 .wv-main{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr);gap:64px;align-items:center;margin-top:56px;}
 .wv-media{min-height:460px;display:flex;align-items:center;justify-content:center;overflow:hidden;
-  padding:34px;border-radius:20px;background:#d4f9e0;}
+  padding:34px;border-radius:20px;background:var(--wv-aloe-soft);}
 .wv-media img{width:100%;height:auto;max-width:520px;display:block;filter:drop-shadow(0 24px 28px rgba(0,0,0,.12));}
-.wv-eyebrow{display:inline-flex;padding:5px 12px;border-radius:9999px;background:#c1fbd4;color:#000;
+.wv-eyebrow{display:inline-flex;padding:5px 12px;border-radius:9999px;background:var(--wv-aloe);color:#000;
   font-size:11px;font-weight:550;letter-spacing:.08em;text-transform:uppercase;}
 .wv-title{max-width:650px;margin:14px 0 22px;font-family:var(--font-wavelength),Helvetica,Arial,sans-serif;font-size:clamp(42px,5vw,64px);
   font-weight:330;line-height:1.02;letter-spacing:.01em;}
@@ -31,7 +32,7 @@ const css = `
 .wv-buy{min-height:48px;margin-top:26px;padding:12px 26px;border:1px solid #000;border-radius:9999px;
   background:#000;color:#fff;font-size:15px;font-weight:550;cursor:pointer;transition:background .15s ease,color .15s ease;}
 .wv-buy:hover:not(:disabled){background:#3f3f46;}.wv-buy:disabled{border-color:#d4d4d8;background:#d4d4d8;color:#71717a;cursor:not-allowed;}
-.wv-buy:focus-visible,.wv-btn:focus-visible{outline:3px solid #99b3ad;outline-offset:3px;}
+.wv-buy:focus-visible,.wv-btn:focus-visible{outline:3px solid var(--wv-focus);outline-offset:3px;}
 .wv-fine{margin-top:16px;color:#71717a;font-size:12.5px;line-height:1.5;}
 .wv-confirm{margin-top:38px;display:flex;gap:14px;align-items:center;padding:20px 22px;border:1px solid #99b3ad;
   border-radius:12px;background:#d4f9e0;}
@@ -62,7 +63,8 @@ const css = `
 .wv-btn.drop{border-color:#000;background:#000;color:#fff;font-size:14px;}.wv-btn.drop:hover:not(:disabled){border-color:#3f3f46;background:#3f3f46;}
 .wv-btn.reset{margin-top:20px;color:#52525b;}.wv-btn.reset:hover:not(:disabled){color:#000;}
 @media (max-width:800px){.wv-wrap{padding-inline:20px}.wv-main{grid-template-columns:1fr;gap:36px;margin-top:36px}.wv-media{min-height:0}.wv-admin-grid{grid-template-columns:1fr}.wv-admin-product{grid-template-columns:1fr}.wv-catalog-grid{grid-template-columns:1fr 1fr}}
-@media (max-width:480px){.wv-wrap{padding-inline:16px}.wv-nav{display:none}.wv-main{margin-top:28px}.wv-media{padding:20px}.wv-title{font-size:40px}.wv-price{font-size:40px}.wv-catalog-grid{grid-template-columns:1fr}.wv-catalog-head{align-items:flex-start;flex-direction:column;gap:5px}.wv-card{padding:20px}}
+@media (max-width:480px){.wv-wrap{padding-inline:16px}.wv-nav{display:none}.wv-main{margin-top:28px}.wv-media{padding:20px}.wv-title{font-size:40px}.wv-price{font-size:40px}.wv-catalog-grid{gap:10px}.wv-product-card{padding:8px}.wv-catalog-head{align-items:flex-start;flex-direction:column;gap:5px}.wv-card{padding:20px}}
+@media (max-width:359px){.wv-catalog-grid{grid-template-columns:1fr}}
 `;
 
 export default function StoreLayout({ children }: { children: ReactNode }) {

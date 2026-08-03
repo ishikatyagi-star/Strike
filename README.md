@@ -221,7 +221,14 @@ STORE_ADMIN_KEY=...
 Only sandbox (`sk_test_`) Prava keys are accepted. The sandbox test card is
 entered **only on Prava's hosted surface** — never in this repo, DB, or logs.
 
-**Core flow (the `/demo` cockpit):**
+**Fastest judge path (self-guided, about five minutes):** open `/demo`, choose
+**Run the live demo**, register a passkey, choose the successful-purchase or
+protection scenario (or set custom limits), sign and approve the mandate, then
+use the labelled Wavelength price controls. The final step links to the verified
+receipt or to a fresh opposite scenario. **Explore an existing mandate** skips
+setup and drafting when a suitable live or completed mandate already exists.
+
+**Presenter-operated core flow (the `/demo` cockpit, under three minutes):**
 
 1. Register the platform passkey at `/setup` (once). Draft a mandate on `/new`
    (natural language or form): *AirPods Pro · price < $180 · before Friday · qty 1*.

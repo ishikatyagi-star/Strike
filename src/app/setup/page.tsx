@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { strikeDb } from "@/db/client";
 import { webauthnCredentials } from "@/db/strike-schema";
 import { pravaConfigured } from "@/lib/prava";
+import { normalizeGuidedQuery, type QueryValue } from "@/app/_components/guided-demo";
+import { DemoProgress, TruthLabel } from "@/app/_components/guided-demo-ui";
 import { RegisterPasskey } from "./register";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +43,8 @@ function Check({
   );
 }
 
-export default async function SetupPage() {
+export default async function SetupPage({ searchParams }: { searchParams: Promise<Record<string, QueryValue>> }) {
+  const { guided } = normalizeGuidedQuery(await searchParams);
   let passkeyRegistered = false;
   let dbOk = false;
   try {
@@ -53,6 +56,28 @@ export default async function SetupPage() {
   }
   const openaiOk = Boolean(process.env.OPENAI_API_KEY);
   const pravaOk = pravaConfigured();
+
+  if (guided) {
+    return (
+      <main className="mx-auto min-h-[100dvh] w-full max-w-4xl px-5 py-8 sm:px-8 sm:py-12 lg:px-10 lg:py-16">
+        <DemoProgress current={1} />
+        <section className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(300px,.62fr)]">
+          <div>
+            <p className="num text-[11px] uppercase tracking-[0.2em] text-muted">Step 1 · Your approval key</p>
+            <h1 className="mt-5 text-[clamp(2.6rem,7vw,5rem)] font-semibold leading-[1.02] tracking-[-0.055em]">Create the passkey that signs your rule.</h1>
+            <p className="mt-6 max-w-2xl text-[16px] leading-7 text-muted">Your passkey signs the exact product, price limit, quantity, and expiry. It does not store a card or approve a purchase by itself.</p>
+            <div className="mt-6 flex flex-wrap gap-2"><TruthLabel tone="blue">Device-bound approval</TruthLabel><TruthLabel>No password shared</TruthLabel></div>
+          </div>
+          <div className="boundary-rail p-6 sm:p-8">
+            <p className="text-[13px] font-semibold text-ink">Passkey registration</p>
+            <p className="mt-2 text-[13px] leading-6 text-muted">Follow the browser prompt once. Cancellation is safe; you can try again here.</p>
+            <div className="mt-6"><RegisterPasskey registered={passkeyRegistered} guided /></div>
+            {passkeyRegistered && <a href="/new?guided=1&scenario=success" className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-ink px-5 text-[14px] font-semibold text-bg">Continue to set my rule →</a>}
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-5xl flex-col px-5 py-10 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
